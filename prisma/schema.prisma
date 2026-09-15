@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id           String        @id @default(cuid())
+  clerkOrgId   String        @unique
+  name         String
+  plan         Plan          @default(STARTER)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  brandKit     BrandKit?
+  agents       AgentConfig[]
+  deliverables Deliverable[]
+}
+
+model BrandKit {
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  brandName      String
+  sector         String
+  city           String
+  language       Language     @default(FR)
+  logoUrl        String?
+  colors         Json?
+  ice            String?
+  ifFiscal       String?
+  rc             String?
+  cnss           String?
+  formeJuridique String?
+  capitalSocial  String?
+  siegeSocial    String?
+  rib            String?
+  banque         String?
+  tone           String?
+  forbiddenWords String[]
+  icpProfile     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model AgentConfig {
+  id                 String       @id @default(cuid())
+  organizationId     String
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentSlug          AgentSlug
+  enabled            Boolean      @default(true)
+  customInstructions String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@unique([organizationId, agentSlug])
+}
+
+model Deliverable {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  agentSlug      AgentSlug
+  title          String
+  content        String       @db.Text
+  format         String?
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+}
+
+enum Plan {
+  STARTER
+  PRO
+  AGENCE
+}
+
+enum Language {
+  FR
+  AR
+  MIX
+}
+
+enum AgentSlug {
+  SALMA
+  YASMINE
+  YOUSSEF
+  MEHDI
+  KARIM
+  NOUR
+  TARIQ
+  AMINE
+  REDA
+  KARIMA
+  NADIA
+  FATIMA
+  IMANE
+  KAMAL
+  SAMIA
+}
