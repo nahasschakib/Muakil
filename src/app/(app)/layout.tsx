@@ -4,38 +4,40 @@ import { UserButton } from '@clerk/nextjs'
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Navbar */}
-      <header className="h-14 border-b border-border bg-card flex items-center px-6 gap-4 shrink-0">
-        <Link href="/agents" className="font-bold text-lg tracking-tight">
-          MUAKIL
+      <header style={{
+        height: 56, borderBottom: '1px solid var(--border)',
+        background: 'var(--card)',
+        display: 'flex', alignItems: 'center',
+        padding: '0 32px', gap: 32,
+        position: 'sticky', top: 0, zIndex: 50,
+      }}>
+        {/* Logo */}
+        <Link href="/agents" style={{
+          fontWeight: 700, fontSize: 18, letterSpacing: '-0.03em',
+          color: 'var(--foreground)', textDecoration: 'none',
+          display: 'flex', alignItems: 'center', gap: 2,
+        }}>
+          MU<span style={{ color: 'oklch(0.38 0.16 22)' }}>A</span>KIL
         </Link>
-        <nav className="flex items-center gap-1 ml-4">
-          <Link
-            href="/agents"
-            className="px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            Agents
-          </Link>
-          <Link
-            href="/brand-kit"
-            className="px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            Brand Kit
-          </Link>
-          <Link
-            href="/livrables"
-            className="px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            Livrables
-          </Link>
+
+        {/* Nav */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1 }}>
+          {[
+            { href: '/agents', label: 'Agents' },
+            { href: '/brand-kit', label: 'Brand Kit' },
+            { href: '/livrables', label: 'Livrables' },
+          ].map((item) => (
+            <Link key={item.href} href={item.href} className="mu-nav-link">
+              {item.label}
+            </Link>
+          ))}
         </nav>
-        <div className="ml-auto">
-          <UserButton />
-        </div>
+
+        {/* Avatar */}
+        <UserButton />
       </header>
 
-      {/* Contenu */}
-      <main className="flex-1 bg-background">
+      <main style={{ flex: 1, background: 'var(--background)' }}>
         {children}
       </main>
     </div>

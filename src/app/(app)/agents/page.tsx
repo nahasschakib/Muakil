@@ -2,102 +2,221 @@ import Link from 'next/link'
 import { requireOrg } from '@/lib/clerk'
 import { AGENTS, agentAccessible, type AgentPlan } from '@/lib/agents'
 
-const COULEUR_MAP: Record<string, string> = {
-  violet:  'bg-violet-100 text-violet-700',
-  emerald: 'bg-emerald-100 text-emerald-700',
-  blue:    'bg-blue-100 text-blue-700',
-  orange:  'bg-orange-100 text-orange-700',
-  amber:   'bg-amber-100 text-amber-700',
-  pink:    'bg-pink-100 text-pink-700',
-  rose:    'bg-rose-100 text-rose-700',
-  indigo:  'bg-indigo-100 text-indigo-700',
-  teal:    'bg-teal-100 text-teal-700',
-  cyan:    'bg-cyan-100 text-cyan-700',
-  purple:  'bg-purple-100 text-purple-700',
-  green:   'bg-green-100 text-green-700',
-  fuchsia: 'bg-fuchsia-100 text-fuchsia-700',
-  sky:     'bg-sky-100 text-sky-700',
-  lime:    'bg-lime-100 text-lime-700',
-}
-
 const PLAN_LABEL: Record<AgentPlan, string> = {
   STARTER: 'Starter',
   PRO: 'Pro',
   AGENCE: 'Agence',
 }
 
+const AGENT_COLORS: Record<string, string> = {
+  salma:   'oklch(0.95 0.02 300)',
+  karima:  'oklch(0.95 0.03 140)',
+  youssef: 'oklch(0.94 0.03 250)',
+  mehdi:   'oklch(0.95 0.04 60)',
+  karim:   'oklch(0.96 0.04 80)',
+  nour:    'oklch(0.95 0.03 340)',
+  yasmine: 'oklch(0.95 0.04 10)',
+  tariq:   'oklch(0.94 0.03 270)',
+  amine:   'oklch(0.95 0.03 180)',
+  reda:    'oklch(0.95 0.03 210)',
+  nadia:   'oklch(0.94 0.03 290)',
+  fatima:  'oklch(0.95 0.03 150)',
+  imane:   'oklch(0.94 0.03 320)',
+  kamal:   'oklch(0.95 0.03 230)',
+  samia:   'oklch(0.96 0.04 120)',
+}
+
 export default async function AgentsPage() {
   const org = await requireOrg()
   const orgPlan = org.plan as AgentPlan
 
+  const accessibles = AGENTS.filter(a => agentAccessible(a.planMin, orgPlan))
+  const proPending = AGENTS.filter(a => a.planMin === 'PRO' && !agentAccessible(a.planMin, orgPlan))
+  const agencePending = AGENTS.filter(a => a.planMin === 'AGENCE' && !agentAccessible(a.planMin, orgPlan))
+
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Tes agents IA</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {org.brandKit?.brandName ?? org.name} — Plan{' '}
-          <span className="font-medium text-foreground">{PLAN_LABEL[orgPlan]}</span>
-        </p>
-      </div>
+    <div style={{ minHeight: '100vh', background: 'var(--background)' }}>
 
-      {/* Grille */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {AGENTS.map((agent) => {
-          const accessible = agentAccessible(agent.planMin, orgPlan)
-          const couleurClass = COULEUR_MAP[agent.couleur] ?? 'bg-muted text-muted-foreground'
+      {/* ── Hero ── */}
+      <section style={{ padding: '48px 32px 40px', borderBottom: '1px solid var(--border)', position: 'relative', overflow: 'hidden', maxWidth: '100vw' }}>
 
-          return (
-            <div
-              key={agent.slug}
-              className={`relative rounded-xl border bg-card p-5 transition-shadow ${
-                accessible
-                  ? 'hover:shadow-md cursor-pointer'
-                  : 'opacity-50 cursor-not-allowed'
-              }`}
-            >
-              {accessible ? (
-                <Link href={`/agents/${agent.slug}`} className="absolute inset-0 rounded-xl" />
-              ) : null}
+        {/* Forme décorative rouge */}
 
-              {/* Badge plan requis */}
-              {!accessible && (
-                <span className="absolute top-3 right-3 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  {PLAN_LABEL[agent.planMin]}
-                </span>
-              )}
-
-              {/* Emoji */}
-              <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg text-xl ${couleurClass}`}>
-                {agent.emoji}
-              </div>
-
-              {/* Nom & rôle */}
-              <h2 className="font-semibold text-sm">{agent.prenom}</h2>
-              <p className="text-xs text-muted-foreground mb-2">{agent.role}</p>
-
-              {/* Description */}
-              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
-                {agent.description}
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
+            <div>
+              <p className="mu-label" style={{ marginBottom: 10 }}>Ton équipe IA</p>
+              <h1 className="mu-title" style={{ margin: 0 }}>
+                {org.brandKit?.brandName ?? org.name}
+              </h1>
+              <p style={{ marginTop: 8, fontSize: 14, color: 'var(--muted-foreground)' }}>
+                {org.brandKit?.city ?? 'Maroc'} · {org.brandKit?.sector ?? 'Secteur non renseigné'}
               </p>
             </div>
-          )
-        })}
-      </div>
 
-      {/* Upgrade banner si plan < AGENCE */}
-      {orgPlan !== 'AGENCE' && (
-        <div className="mt-10 rounded-xl border border-dashed border-border bg-muted/40 p-6 text-center">
-          <p className="text-sm font-medium">
-            {orgPlan === 'STARTER'
-              ? '13 agents supplémentaires disponibles en plan Pro ou Agence'
-              : '8 agents supplémentaires disponibles en plan Agence'}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Passe à un plan supérieur pour débloquer toute ton équipe IA
-          </p>
+            {/* Plan badge */}
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8,
+            }}>
+              <span className={`mu-plan-badge ${orgPlan.toLowerCase()}`}>
+                Plan {PLAN_LABEL[orgPlan]}
+              </span>
+              <p style={{ fontSize: 12, color: 'var(--muted-foreground)', margin: 0 }}>
+                {accessibles.length} agent{accessibles.length > 1 ? 's' : ''} actif{accessibles.length > 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 1, marginTop: 36,
+            background: 'var(--border)', borderRadius: 16, overflow: 'hidden',
+          }}>
+            {[
+              { num: accessibles.length, label: 'Agents actifs' },
+              { num: AGENTS.length - accessibles.length, label: 'À débloquer' },
+              { num: 15, label: 'Agents au total' },
+            ].map((s) => (
+              <div key={s.label} style={{
+                background: 'var(--card)', padding: '20px 24px',
+              }}>
+                <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--foreground)' }}>
+                  {s.num}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--muted-foreground)', marginTop: 4 }}>
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
+      </section>
+
+      {/* ── Agents accessibles ── */}
+      <section style={{ maxWidth: 900, margin: '0 auto', padding: '40px 32px 0' }}>
+        <p className="mu-label" style={{ marginBottom: 20 }}>
+          {accessibles.length === 1 ? 'Ton agent' : 'Tes agents'}
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {accessibles.map((agent) => (
+            <Link key={agent.slug} href={`/agents/${agent.slug}`} style={{ textDecoration: 'none' }}>
+              <div className="mu-featured-card">
+                {/* Accent couleur à gauche selon agent */}
+                <div style={{
+                  position: 'absolute', left: 0, top: 0, bottom: 0, width: 4,
+                  background: agent.slug === 'karima'
+                    ? 'oklch(0.45 0.14 140)'
+                    : 'oklch(0.38 0.16 22)',
+                  borderRadius: '4px 0 0 4px',
+                }} />
+
+                <div className="mu-agent-icon" style={{ background: AGENT_COLORS[agent.slug] ?? 'var(--muted)', flexShrink: 0 }}>
+                  {agent.emoji}
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--foreground)' }}>
+                    {agent.prenom}
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--muted-foreground)', marginTop: 2 }}>
+                    {agent.role}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--muted-foreground)', marginTop: 6, lineHeight: 1.5 }}>
+                    {agent.description}
+                  </div>
+                </div>
+
+                <div style={{
+                  flexShrink: 0, fontSize: 13, fontWeight: 500,
+                  color: 'oklch(0.38 0.16 22)',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                }}>
+                  Ouvrir →
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Agents Pro ── */}
+      {proPending.length > 0 && (
+        <section style={{ maxWidth: 900, margin: '0 auto', padding: '40px 32px 0' }}>
+          <p className="mu-label" style={{ marginBottom: 20 }}>Plan Pro — à débloquer</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+            {proPending.map((agent) => (
+              <div key={agent.slug} className="mu-agent-card locked">
+                <span style={{
+                  position: 'absolute', top: 12, right: 12,
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
+                  textTransform: 'uppercase', padding: '3px 8px', borderRadius: 999,
+                  background: 'oklch(0.93 0.03 250)', color: 'oklch(0.35 0.15 250)',
+                }}>Pro</span>
+                <div className="mu-agent-icon" style={{ background: AGENT_COLORS[agent.slug] ?? 'var(--muted)', width: 40, height: 40, fontSize: 18, flexShrink: 0, marginBottom: 8 }}>
+                  {agent.emoji}
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--foreground)' }}>{agent.prenom}</div>
+                <div style={{ fontSize: 11, color: 'var(--muted-foreground)', marginTop: 2 }}>{agent.role}</div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
+
+      {/* ── Agents Agence ── */}
+      {agencePending.length > 0 && (
+        <section style={{ maxWidth: 900, margin: '0 auto', padding: '40px 32px 0' }}>
+          <p className="mu-label" style={{ marginBottom: 20 }}>Plan Agence — à débloquer</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+            {agencePending.map((agent) => (
+              <div key={agent.slug} className="mu-agent-card locked">
+                <span style={{
+                  position: 'absolute', top: 12, right: 12,
+                  fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
+                  textTransform: 'uppercase', padding: '3px 8px', borderRadius: 999,
+                  background: 'oklch(0.93 0.04 22)', color: 'oklch(0.38 0.16 22)',
+                }}>Agence</span>
+                <div className="mu-agent-icon" style={{ background: AGENT_COLORS[agent.slug] ?? 'var(--muted)', width: 40, height: 40, fontSize: 18, flexShrink: 0, marginBottom: 8 }}>
+                  {agent.emoji}
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--foreground)' }}>{agent.prenom}</div>
+                <div style={{ fontSize: 11, color: 'var(--muted-foreground)', marginTop: 2 }}>{agent.role}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Upgrade banner ── */}
+      {orgPlan !== 'AGENCE' && (
+        <section style={{ maxWidth: 900, margin: '40px auto 0', padding: '0 32px 48px' }}>
+          <div style={{
+            borderRadius: 20, border: '1px dashed var(--border)',
+            background: 'var(--card)', padding: '24px 28px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: 16, flexWrap: 'wrap',
+          }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--foreground)' }}>
+                {orgPlan === 'STARTER'
+                  ? '13 agents supplémentaires t\'attendent'
+                  : '8 agents Agence à débloquer'}
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--muted-foreground)', marginTop: 4 }}>
+                {orgPlan === 'STARTER'
+                  ? 'À partir de 290 MAD/mois — essai 14 jours gratuit'
+                  : 'Plan Agence à partir de 1 990 MAD/mois'}
+              </div>
+            </div>
+            <a href="#" className="mu-pill-cta" style={{ fontSize: 13 }}>
+              Voir les plans →
+            </a>
+          </div>
+        </section>
+      )}
+
     </div>
   )
 }
