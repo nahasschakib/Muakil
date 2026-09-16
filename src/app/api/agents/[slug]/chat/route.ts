@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { getAgent } from '@/lib/agents'
+import { getAgentPrompt } from '@/lib/agents/prompts'
 import { anthropic } from '@/lib/anthropic'
 import { db } from '@/lib/db'
 
@@ -35,33 +36,13 @@ export async function POST(
 
     const bk = org?.brandKit
 
-    // Bloc contexte entreprise — injecté uniquement si BrandKit existe
-    const contextEntreprise = bk
-      ? `
-## Contexte entreprise
-Tu travailles pour "${bk.brandName}", une entreprise marocaine du secteur "${bk.sector}", basée à ${bk.city}.
-- Forme juridique : ${bk.formeJuridique ?? 'non renseignée'}
-- Langue de travail : ${bk.language}
-- Ton de communication : ${bk.tone ?? 'professionnel'}
-${bk.icpProfile ? `- Profil client cible : ${bk.icpProfile}` : ''}
-${bk.forbiddenWords?.length ? `- Mots à éviter absolument : ${bk.forbiddenWords.join(', ')}` : ''}
-${bk.ice ? `- ICE : ${bk.ice}` : ''}
-${bk.rc ? `- RC : ${bk.rc}` : ''}
-${bk.siegeSocial ? `- Siège social : ${bk.siegeSocial}` : ''}
-
-Utilise toujours ces informations pour personnaliser tes réponses. Ne demande jamais des informations déjà présentes ici.`
-      : ''
-
-    const systemPrompt = `Tu es ${agent.prenom}, un agent IA spécialisé en "${agent.role}" pour le marché marocain.
-${agent.description}
-${contextEntreprise}
-
-## Règles
-- Tu réponds toujours en français sauf si l'utilisateur écrit en arabe ou darija
-- Tu es professionnel, direct et utile
-- Tu connais le contexte marocain : réglementations, culture business, spécificités locales
-- Tu ne sors jamais de ton rôle de ${agent.prenom}
-- Tu personnalises toujours tes réponses avec le contexte de l'entreprise ci-dessus`
+    const systemPrompt = getAgentPrompt(
+      agent.slug,
+      agent.prenom,
+      agent.role,
+      agent.description,
+      bk
+    )
 
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
