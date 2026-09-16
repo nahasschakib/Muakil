@@ -2,12 +2,52 @@
 
 import { useState, useRef, useEffect, useTransition } from 'react'
 import ReactMarkdown from 'react-markdown'
+import { saveLivrable } from '@/app/(app)/livrables/actions'
 import type { Agent } from '@/lib/agents'
 import type { BrandKit } from '@prisma/client'
 
 type Message = {
   role: 'user' | 'assistant'
   content: string
+}
+
+function SaveButton({
+  content,
+  agentSlug,
+  agentPrenom,
+}: {
+  content: string
+  agentSlug: string
+  agentPrenom: string
+}) {
+  const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+
+  async function handleSave() {
+    setStatus('saving')
+    try {
+      const firstLine = content.split('\n').find((l) => l.trim()) ?? 'Livrable sans titre'
+      const title = firstLine.replace(/^#+\s*/, '').slice(0, 80)
+      await saveLivrable({ agentSlug, title, content })
+      setStatus('saved')
+      setTimeout(() => setStatus('idle'), 3000)
+    } catch {
+      setStatus('error')
+      setTimeout(() => setStatus('idle'), 3000)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleSave}
+      disabled={status === 'saving' || status === 'saved'}
+      className="self-start text-[11px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+    >
+      {status === 'idle' && '📎 Enregistrer'}
+      {status === 'saving' && 'Enregistrement…'}
+      {status === 'saved' && '✅ Enregistré'}
+      {status === 'error' && '❌ Erreur'}
+    </button>
+  )
 }
 
 export default function AgentChat({
@@ -99,32 +139,41 @@ export default function AgentChat({
               key={i}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div
-                className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                  msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground rounded-br-sm'
-                    : 'bg-muted text-foreground rounded-bl-sm'
-                }`}
-              >
-                {msg.role === 'user' ? (
-                  msg.content
-                ) : (
-                  <ReactMarkdown
-                    components={{
-                      p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                      strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                      ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-1">{children}</ul>,
-                      ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-1">{children}</ol>,
-                      li: ({ children }) => <li>{children}</li>,
-                      h1: ({ children }) => <h1 className="mb-2 text-base font-bold">{children}</h1>,
-                      h2: ({ children }) => <h2 className="mb-2 text-sm font-bold">{children}</h2>,
-                      h3: ({ children }) => <h3 className="mb-1 text-sm font-semibold">{children}</h3>,
-                      hr: () => <hr className="my-2 border-border" />,
-                      code: ({ children }) => <code className="rounded bg-background/50 px-1 py-0.5 font-mono text-xs">{children}</code>,
-                    }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
+              <div className="flex flex-col gap-1 max-w-[80%]">
+                <div
+                  className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground rounded-br-sm'
+                      : 'bg-muted text-foreground rounded-bl-sm'
+                  }`}
+                >
+                  {msg.role === 'user' ? (
+                    msg.content
+                  ) : (
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                        ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-1">{children}</ul>,
+                        ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-1">{children}</ol>,
+                        li: ({ children }) => <li>{children}</li>,
+                        h1: ({ children }) => <h1 className="mb-2 text-base font-bold">{children}</h1>,
+                        h2: ({ children }) => <h2 className="mb-2 text-sm font-bold">{children}</h2>,
+                        h3: ({ children }) => <h3 className="mb-1 text-sm font-semibold">{children}</h3>,
+                        hr: () => <hr className="my-2 border-border" />,
+                        code: ({ children }) => <code className="rounded bg-background/50 px-1 py-0.5 font-mono text-xs">{children}</code>,
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  )}
+                </div>
+                {msg.role === 'assistant' && (
+                  <SaveButton
+                    content={msg.content}
+                    agentSlug={agent.slug}
+                    agentPrenom={agent.prenom}
+                  />
                 )}
               </div>
             </div>
