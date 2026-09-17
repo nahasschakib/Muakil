@@ -90,19 +90,21 @@ export function FinanceDashboard({ analysis, periode, brandName }: Props) {
       {/* Ratios — 3 blocs */}
       <div className="grid grid-cols-3 gap-3">
         {Object.entries(analysis.ratios).map(([key, ratio]) => {
-          const cfg = statutConfig[ratio.statut as keyof typeof statutConfig] || statutConfig.attention;
+          const ratioObj = ratio as Record<string, string>;
+          const statut = (ratioObj.statut || "attention") as keyof typeof statutConfig;
+          const cfg = statutConfig[statut] || statutConfig.attention;
           const labels: Record<string, string> = { rentabilite: "Rentabilité", liquidite: "Liquidité", solvabilite: "Solvabilité" };
-          const entries = Object.entries(ratio).filter(([k]) => k !== "statut");
+          const entries = Object.entries(ratioObj).filter(([k]) => k !== "statut");
           return (
             <div key={key} className={`border rounded-xl p-3 ${cfg.bg}`}>
               <div className="flex items-center gap-2 mb-2">
                 <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
-                <span className={`text-xs font-semibold ${cfg.text}`}>{labels[key]}</span>
+                <span className={`text-xs font-semibold ${cfg.text}`}>{labels[key] || key}</span>
               </div>
               {entries.map(([k, v]) => (
                 <div key={k} className="flex justify-between text-xs py-0.5">
                   <span className="text-gray-500 capitalize">{k.replace(/([A-Z])/g, " $1").toLowerCase()}</span>
-                  <span className="text-white font-medium">{v as string}</span>
+                  <span className="text-white font-medium">{String(v)}</span>
                 </div>
               ))}
             </div>
