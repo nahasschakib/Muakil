@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 
 function fmt(n: number) {
   return n.toLocaleString("fr-MA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -8,10 +9,19 @@ function fmt(n: number) {
 
 export default function KarimaPrintPage() {
   const [invoice, setInvoice] = useState<any>(null);
+  const [qrCodeSvg, setQrCodeSvg] = useState<string>("");
 
   useEffect(() => {
     const raw = localStorage.getItem("muakil_print_invoice");
-    if (raw) setInvoice(JSON.parse(raw));
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      setInvoice(parsed);
+      if (parsed.qrData) {
+        QRCode.toString(parsed.qrData, { type: "svg", width: 80, margin: 1 })
+          .then(setQrCodeSvg)
+          .catch(() => setQrCodeSvg(""));
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -155,6 +165,18 @@ export default function KarimaPrintPage() {
           {emetteur.if && ` IF : ${emetteur.if}.`}
           {emetteur.rc && ` RC : ${emetteur.rc}.`}
         </div>
+
+        {qrCodeSvg && (
+          <div className="flex items-start gap-4 mt-4 pt-4 border-t border-gray-200">
+            <div dangerouslySetInnerHTML={{ __html: qrCodeSvg }} style={{ width: 80, height: 80 }} />
+            <div className="text-xs text-gray-400">
+              <p className="font-semibold text-gray-600 mb-1">⚡ e-Facture MUAKIL</p>
+              <p>Facture électronique conforme</p>
+              <p>Scannez pour vérifier l'authenticité</p>
+              <p className="mt-1 font-mono text-gray-300 text-xs">SHA256 vérifié</p>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

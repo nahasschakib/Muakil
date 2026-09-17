@@ -35,6 +35,9 @@ export function InvoiceStudio() {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [qrData, setQrData] = useState<string | null>(null);
+  const [xmlData, setXmlData] = useState<string | null>(null);
+  const [eFactureLoading, setEFactureLoading] = useState(false);
 
   function addLine() {
     setLines([...lines, { designation: "", qty: 1, unitPrice: 0 }]);
@@ -90,6 +93,37 @@ export function InvoiceStudio() {
     setSaved(true);
   }
 
+  async function handleEFacture() {
+    if (!invoice) return;
+    setEFactureLoading(true);
+    try {
+      const res = await fetch("/api/agents/karima/efacture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invoice }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setQrData(data.qrData);
+        setXmlData(data.xml);
+        // Stocker pour la page print
+        localStorage.setItem("muakil_print_invoice", JSON.stringify({ ...invoice, qrData: data.qrData }));
+        // Télécharger le XML
+        const blob = new Blob([data.xml], { type: "application/xml" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `efacture-${invoice.invoiceNumber}.xml`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch {
+      console.error("Erreur e-facture");
+    } finally {
+      setEFactureLoading(false);
+    }
+  }
+
   function handlePrint() {
     localStorage.setItem("muakil_print_invoice", JSON.stringify(invoice));
     window.open("/print/karima", "_blank");
@@ -115,6 +149,15 @@ export function InvoiceStudio() {
                 <button onClick={handlePrint} className="text-xs border border-[#2A2D3E] hover:border-gray-500 text-gray-300 px-4 py-2 rounded-lg font-medium transition-colors">
                   Imprimer / PDF
                 </button>
+                {invoice && (
+                  <button onClick={handleEFacture} disabled={eFactureLoading}
+                    className="text-xs border border-emerald-500/40 hover:border-emerald-500 text-emerald-400 hover:text-emerald-300 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-40">
+                    {eFactureLoading ? "Génération…" : "⚡ e-Facture XML"}
+                  </button>
+                )}
+                {qrData && (
+                  <span className="text-xs text-emerald-400 font-medium">✓ QR Code généré</span>
+                )}
                 {!saved ? (
                   <button onClick={handleSave} className="text-xs bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                     Enregistrer
