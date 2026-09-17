@@ -171,6 +171,7 @@ const PLAN_RANK: Record<AgentPlan, number> = {
 }
 
 export function agentAccessible(agentPlan: AgentPlan, orgPlan: AgentPlan): boolean {
+  if (process.env.NEXT_PUBLIC_UNLOCK_ALL_AGENTS === 'true') return true
   return PLAN_RANK[orgPlan] >= PLAN_RANK[agentPlan]
 }
 

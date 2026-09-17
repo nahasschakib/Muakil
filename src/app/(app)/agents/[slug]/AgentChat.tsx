@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import { saveLivrable } from '@/app/(app)/livrables/actions'
 import type { Agent } from '@/lib/agents'
 import type { BrandKit } from '@prisma/client'
+import remarkGfm from 'remark-gfm'
 
 type Message = {
   role: 'user' | 'assistant'
@@ -151,6 +152,7 @@ export default function AgentChat({
                     msg.content
                   ) : (
                     <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
                       components={{
                         p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
                         strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
@@ -162,6 +164,20 @@ export default function AgentChat({
                         h3: ({ children }) => <h3 className="mb-1 text-sm font-semibold">{children}</h3>,
                         hr: () => <hr className="my-2 border-border" />,
                         code: ({ children }) => <code className="rounded bg-background/50 px-1 py-0.5 font-mono text-xs">{children}</code>,
+                        table: ({ children }) => (
+                          <div className="overflow-x-auto my-3">
+                            <table className="w-full text-xs border-collapse">{children}</table>
+                          </div>
+                        ),
+                        thead: ({ children }) => <thead className="bg-background/60">{children}</thead>,
+                        tbody: ({ children }) => <tbody>{children}</tbody>,
+                        tr: ({ children }) => <tr className="border-b border-border/50">{children}</tr>,
+                        th: ({ children }) => (
+                          <th className="px-3 py-2 text-left font-semibold text-foreground whitespace-nowrap">{children}</th>
+                        ),
+                        td: ({ children }) => (
+                          <td className="px-3 py-2 text-muted-foreground">{children}</td>
+                        ),
                       }}
                     >
                       {msg.content}
