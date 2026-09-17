@@ -51,17 +51,15 @@ ${network === "Facebook" ? "Ton conversationnel, accessible, avec question d'eng
       messages: [{ role: "user", content: userPrompt }],
     });
   } catch (err) {
-    console.error("[Salma] Anthropic error:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 
   const raw = message.content[0].type === "text" ? message.content[0].text : "";
 
-  console.log("[Salma] raw response:", raw);
-
   try {
     const clean = raw.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
     const parsed = JSON.parse(clean);
+    if (Array.isArray(parsed.hashtags)) { parsed.hashtags = parsed.hashtags.map((h: string) => h.replace(/^#+/, "")); }
     return NextResponse.json({ success: true, post: parsed, network });
   } catch {
     return NextResponse.json({ error: "Erreur de parsing", raw }, { status: 500 });
