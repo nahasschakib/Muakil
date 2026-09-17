@@ -91,7 +91,8 @@ export function InvoiceStudio() {
   }
 
   function handlePrint() {
-    window.print();
+    localStorage.setItem("muakil_print_invoice", JSON.stringify(invoice));
+    window.open("/print/karima", "_blank");
   }
 
   return (
