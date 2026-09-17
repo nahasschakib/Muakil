@@ -34,6 +34,7 @@ type Props = {
   price: string;
   platform: string;
   contentType: string;
+  productImage?: string | null;
 };
 
 const platformConfig: Record<string, { color: string; bg: string; badge: string }> = {
@@ -44,7 +45,7 @@ const platformConfig: Record<string, { color: string; bg: string; badge: string 
   "WhatsApp Business": { color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", badge: "bg-emerald-500" },
 };
 
-export function ProductPreview({ content, productName, price, platform, contentType }: Props) {
+export function ProductPreview({ content, productName, price, platform, contentType, productImage }: Props) {
   const cfg = platformConfig[platform] || platformConfig["Site propre"];
   const { productSheet, videoScript } = content;
 
@@ -65,12 +66,18 @@ export function ProductPreview({ content, productName, price, platform, contentT
             )}
           </div>
 
-          {/* Image placeholder */}
-          <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-40 flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-4xl mb-1">🛍️</p>
-              <p className="text-xs text-gray-500">{productName}</p>
-            </div>
+          {/* Image */}
+          <div className="h-48 overflow-hidden">
+            {productImage ? (
+              <img src={productImage} alt={productName} className="w-full h-full object-cover" />
+            ) : (
+              <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-full flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-4xl mb-1">🛍️</p>
+                  <p className="text-xs text-gray-500">{productName}</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Contenu fiche */}

@@ -44,6 +44,7 @@ export function EcomStudio() {
   const [content, setContent] = useState<Content | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [productImage, setProductImage] = useState<string | null>(null);
 
   async function handleGenerate() {
     if (!productName.trim() || !price.trim()) return;
@@ -82,6 +83,14 @@ export function EcomStudio() {
       content: text,
     });
     setSaved(true);
+  }
+
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setProductImage(reader.result as string);
+    reader.readAsDataURL(file);
   }
 
   return (
@@ -155,6 +164,27 @@ export function EcomStudio() {
             <input value={productName} onChange={(e) => setProductName(e.target.value)}
               placeholder="Ex : Robe Caftan brodée main…"
               className="w-full bg-[#1C1F2E] border border-[#2A2D3E] rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-rose-500 transition-colors" />
+          </section>
+
+          {/* Photo produit */}
+          <section className="space-y-2">
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              Photo produit <span className="text-gray-600 font-normal normal-case">(optionnel)</span>
+            </label>
+            {productImage ? (
+              <div className="relative">
+                <img src={productImage} alt="produit" className="w-full h-40 object-cover rounded-xl border border-[#2A2D3E]" />
+                <button onClick={() => setProductImage(null)} className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-lg">
+                  Supprimer
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-[#2A2D3E] rounded-xl cursor-pointer hover:border-rose-500 transition-colors">
+                <span className="text-2xl mb-1">📷</span>
+                <span className="text-xs text-gray-500">Cliquer pour uploader une photo</span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              </label>
+            )}
           </section>
 
           {/* Catégorie */}
@@ -232,7 +262,7 @@ export function EcomStudio() {
         <div className="lg:col-span-3">
           {content ? (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <ProductPreview content={content} productName={productName} price={price} platform={platform} contentType={contentType} />
+              <ProductPreview content={content} productName={productName} price={price} platform={platform} contentType={contentType} productImage={productImage} />
             </div>
           ) : (
             <div className="h-full min-h-64 flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-[#2A2D3E] p-12">
