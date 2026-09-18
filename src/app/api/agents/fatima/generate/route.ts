@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     include: { brandKit: true },
   });
 
-  const entreprise = org?.brandKit?.companyName || org?.name || "Notre entreprise";
+  const entreprise = org?.brandKit?.brandName || org?.name || "Notre entreprise";
   const secteur = org?.brandKit?.sector || "";
   const tonBrand = org?.brandKit?.tone || ton;
 
