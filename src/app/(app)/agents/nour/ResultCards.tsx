@@ -174,7 +174,7 @@ export function ResultCards({ data }: Props) {
         <div>
           <p className="text-xs text-gray-400">
             <span className="text-white font-semibold">{data.total}</span> résultats pour{" "}
-            <span className="text-violet-400">"{data.query}"</span>
+            <span className="text-violet-400">&quot;{data.query}&quot;</span>
           </p>
         </div>
         <span className="text-xs text-gray-500 capitalize">{data.type}</span>

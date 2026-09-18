@@ -1,10 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import HRStudio from "./HRStudio";
+import StrategyStudio from "./StrategyStudio";
 
-
-export default async function NadiaPage() {
+export default async function TariqPage() {
   const { orgId } = await auth();
   if (!orgId) redirect("/sign-in");
 
@@ -13,5 +12,5 @@ export default async function NadiaPage() {
   });
   if (!org) redirect("/onboarding");
 
-  return <HRStudio orgId={org.id} />;
+  return <StrategyStudio orgId={org.id} />;
 }
