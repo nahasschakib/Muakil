@@ -92,29 +92,124 @@ export default function AnalyticsStudio({ orgId }: { orgId: string }) {
             />
           </div>
 
-          {(typeOutput === "analyse" || typeOutput === "rapport") && (
-            <div>
-              <label className={labelClass}>Données / chiffres disponibles</label>
-              <textarea
-                className={`${inputClass} resize-none h-24`}
-               placeholder={
-                    domaine === "Finance & Trésorerie"
-                        ? "ex: CA = 120 000 MAD | Charges = 85 000 MAD | Marge = 29% | Impayés = 15 000 MAD | Clients = 34"
-                        : domaine === "Commercial & Ventes"
-                        ? "ex: Ventes = 45 000 MAD | Objectif = 60 000 MAD | Nouveaux clients = 8 | Taux conversion = 12%"
-                        : domaine === "Marketing & Communication"
-                        ? "ex: Budget dépensé = 5 000 MAD | Leads générés = 120 | Taux ouverture email = 22% | Followers +150"
-                        : domaine === "RH & Équipe"
-                        ? "ex: Effectif = 12 | Absences = 3 jours | Turnover = 8% | Heures sup = 45h | Recrutements = 2"
-                        : domaine === "Service client"
-                        ? "ex: Réclamations = 14 | Délai réponse moyen = 4h | Satisfaction = 3.8/5 | Tickets résolus = 89%"
-                        : "ex: Indiquez vos chiffres clés — volumes, montants MAD, pourcentages, objectifs vs réalisé..."
-                    }
-                value={donnees}
-                onChange={e => setDonnees(e.target.value)}
-              />
-            </div>
-          )}
+         {(typeOutput === "analyse" || typeOutput === "rapport") && (
+  <div>
+    <label className={labelClass}>Données clés</label>
+    {domaine === "Finance & Trésorerie" && (
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { key: "ca", label: "CA (MAD)", placeholder: "ex: 120 000" },
+          { key: "charges", label: "Charges (MAD)", placeholder: "ex: 85 000" },
+          { key: "marge", label: "Marge brute (%)", placeholder: "ex: 29" },
+          { key: "impayes", label: "Impayés (MAD)", placeholder: "ex: 15 000" },
+          { key: "clients", label: "Clients actifs", placeholder: "ex: 34" },
+          { key: "tresorerie", label: "Trésorerie (MAD)", placeholder: "ex: 45 000" },
+        ].map(f => (
+          <div key={f.key}>
+            <label className="block text-xs text-white/40 mb-1">{f.label}</label>
+            <input className={inputClass} placeholder={f.placeholder}
+              onChange={e => setDonnees(prev => {
+                const lines = prev.split("\n").filter(l => !l.startsWith(f.label));
+                return [...lines, `${f.label} : ${e.target.value}`].filter(Boolean).join("\n");
+              })} />
+          </div>
+        ))}
+      </div>
+    )}
+    {domaine === "Commercial & Ventes" && (
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { key: "ventes", label: "Ventes (MAD)", placeholder: "ex: 45 000" },
+          { key: "objectif", label: "Objectif (MAD)", placeholder: "ex: 60 000" },
+          { key: "nouveaux", label: "Nouveaux clients", placeholder: "ex: 8" },
+          { key: "conversion", label: "Taux conversion (%)", placeholder: "ex: 12" },
+          { key: "panier", label: "Panier moyen (MAD)", placeholder: "ex: 1 200" },
+          { key: "prospects", label: "Prospects contactés", placeholder: "ex: 65" },
+        ].map(f => (
+          <div key={f.key}>
+            <label className="block text-xs text-white/40 mb-1">{f.label}</label>
+            <input className={inputClass} placeholder={f.placeholder}
+              onChange={e => setDonnees(prev => {
+                const lines = prev.split("\n").filter(l => !l.startsWith(f.label));
+                return [...lines, `${f.label} : ${e.target.value}`].filter(Boolean).join("\n");
+              })} />
+          </div>
+        ))}
+      </div>
+    )}
+    {domaine === "Marketing & Communication" && (
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { key: "budget", label: "Budget dépensé (MAD)", placeholder: "ex: 5 000" },
+          { key: "leads", label: "Leads générés", placeholder: "ex: 120" },
+          { key: "ouverture", label: "Taux ouverture email (%)", placeholder: "ex: 22" },
+          { key: "followers", label: "Nouveaux followers", placeholder: "ex: 150" },
+          { key: "reach", label: "Portée posts", placeholder: "ex: 8 500" },
+          { key: "cpl", label: "Coût par lead (MAD)", placeholder: "ex: 42" },
+        ].map(f => (
+          <div key={f.key}>
+            <label className="block text-xs text-white/40 mb-1">{f.label}</label>
+            <input className={inputClass} placeholder={f.placeholder}
+              onChange={e => setDonnees(prev => {
+                const lines = prev.split("\n").filter(l => !l.startsWith(f.label));
+                return [...lines, `${f.label} : ${e.target.value}`].filter(Boolean).join("\n");
+              })} />
+          </div>
+        ))}
+      </div>
+    )}
+    {domaine === "RH & Équipe" && (
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { key: "effectif", label: "Effectif total", placeholder: "ex: 12" },
+          { key: "absences", label: "Jours d'absence", placeholder: "ex: 8" },
+          { key: "turnover", label: "Turnover (%)", placeholder: "ex: 8" },
+          { key: "heures", label: "Heures sup (h)", placeholder: "ex: 45" },
+          { key: "recrutements", label: "Recrutements", placeholder: "ex: 2" },
+          { key: "formation", label: "Jours formation", placeholder: "ex: 3" },
+        ].map(f => (
+          <div key={f.key}>
+            <label className="block text-xs text-white/40 mb-1">{f.label}</label>
+            <input className={inputClass} placeholder={f.placeholder}
+              onChange={e => setDonnees(prev => {
+                const lines = prev.split("\n").filter(l => !l.startsWith(f.label));
+                return [...lines, `${f.label} : ${e.target.value}`].filter(Boolean).join("\n");
+              })} />
+          </div>
+        ))}
+      </div>
+    )}
+    {domaine === "Service client" && (
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { key: "reclamations", label: "Réclamations", placeholder: "ex: 14" },
+          { key: "delai", label: "Délai réponse moyen (h)", placeholder: "ex: 4" },
+          { key: "satisfaction", label: "Satisfaction (/5)", placeholder: "ex: 3.8" },
+          { key: "resolus", label: "Tickets résolus (%)", placeholder: "ex: 89" },
+          { key: "recontacts", label: "Recontacts clients", placeholder: "ex: 6" },
+          { key: "nps", label: "NPS score", placeholder: "ex: 42" },
+        ].map(f => (
+          <div key={f.key}>
+            <label className="block text-xs text-white/40 mb-1">{f.label}</label>
+            <input className={inputClass} placeholder={f.placeholder}
+              onChange={e => setDonnees(prev => {
+                const lines = prev.split("\n").filter(l => !l.startsWith(f.label));
+                return [...lines, `${f.label} : ${e.target.value}`].filter(Boolean).join("\n");
+              })} />
+          </div>
+        ))}
+      </div>
+    )}
+    {!["Finance & Trésorerie","Commercial & Ventes","Marketing & Communication","RH & Équipe","Service client"].includes(domaine) && (
+      <textarea
+        className={`${inputClass} resize-none h-24`}
+        placeholder="ex: Indiquez vos chiffres clés — volumes, montants MAD, pourcentages, objectifs vs réalisé..."
+        value={donnees}
+        onChange={e => setDonnees(e.target.value)}
+      />
+    )}
+  </div>
+)}
 
           <button
             onClick={generate}
