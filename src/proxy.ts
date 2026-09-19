@@ -16,6 +16,7 @@ const isOnboardingRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, orgId } = await auth()
+  
 
   // Route publique → laisser passer
   if (isPublicRoute(req)) {

@@ -30,7 +30,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Link key={item.href} href={item.href} className="mu-nav-link">
               {item.label}
             </Link>
+            
           ))}
+          <Link href="/workflows">Workflows</Link>
         </nav>
 
         {/* Avatar */}

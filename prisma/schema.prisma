@@ -16,6 +16,7 @@ model Organization {
   brandKit     BrandKit?
   agents       AgentConfig[]
   deliverables Deliverable[]
+  workflows Workflow[]
 }
 
 model BrandKit {
@@ -97,4 +98,55 @@ enum AgentSlug {
   IMANE
   KAMAL
   SAMIA
+}
+
+// ─── Workflows ───────────────────────────────────────────
+
+model Workflow {
+  id             String         @id @default(cuid())
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  slug           WorkflowSlug
+  name           String
+  status         WorkflowStatus @default(IN_PROGRESS)
+  context        Json           @default("{}")
+  steps          WorkflowStep[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([organizationId])
+}
+
+model WorkflowStep {
+  id         String     @id @default(cuid())
+  workflowId String
+  workflow   Workflow   @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  agentSlug  AgentSlug
+  order      Int
+  status     StepStatus @default(PENDING)
+  input      Json?
+  output     Json?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([workflowId])
+}
+
+enum WorkflowSlug {
+  PROSPECT_TO_CASH
+  IDEA_TO_MARKETING
+  SUPPORT_CLIENT
+}
+
+enum WorkflowStatus {
+  IN_PROGRESS
+  COMPLETED
+  PAUSED
+}
+
+enum StepStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
 }
