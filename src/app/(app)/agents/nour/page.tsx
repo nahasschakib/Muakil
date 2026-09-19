@@ -3,7 +3,12 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { ResearchStudio } from "./ResearchStudio";
 
-export default async function NourStudioPage() {
+export default async function NourStudioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ workflowId?: string; stepId?: string }>;
+}) {
+  const params = await searchParams
   const { orgId } = await auth();
   if (!orgId) redirect("/sign-in");
 
@@ -14,5 +19,10 @@ export default async function NourStudioPage() {
 
   if (!org?.brandKit) redirect("/onboarding");
 
-  return <ResearchStudio />;
+  return (
+    <ResearchStudio
+      workflowId={params.workflowId}
+      stepId={params.stepId}
+    />
+  );
 }

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { ResultCards } from "./ResultCards";
 import { saveLivrable } from "@/app/(app)/livrables/actions";
-
+import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
+import { useRouter } from "next/navigation";
 type SearchType = "prospects" | "concurrents" | "actualites" | "marche";
 
 const searchTypes: { id: SearchType; emoji: string; label: string; desc: string }[] = [
@@ -20,7 +21,12 @@ const moroccanCities = [
 
 type SearchData = any;
 
-export function ResearchStudio() {
+type ResearchStudioProps = {
+  workflowId?: string
+  stepId?: string
+}
+
+export function ResearchStudio({ workflowId, stepId }: ResearchStudioProps) {
   const [searchType, setSearchType] = useState<SearchType>("prospects");
   const [query, setQuery] = useState("");
   const [city, setCity] = useState("Casablanca");
@@ -29,6 +35,20 @@ export function ResearchStudio() {
   const [data, setData] = useState<SearchData | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router =useRouter()
+  const [completingStep, setCompletingStep] = useState(false)
+
+  async function handleCompleteStep() {
+    if (!workflowId || !stepId || !data) return
+    setCompletingStep(true)
+    await completeWorkflowStep(workflowId, stepId, {
+      searchType,
+      query,
+      city,
+      results: data,
+    })
+    router.push(`/workflows/${workflowId}`)
+  }
 
   async function handleSearch() {
     if (!query.trim()) return;
@@ -90,13 +110,27 @@ export function ResearchStudio() {
             <p className="text-xs text-gray-500">ResearchStudio — Veille & recherche web en temps réel</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            {data && !saved && (
-              <button onClick={handleSave} className="text-xs bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                Enregistrer les résultats
-              </button>
-            )}
-            {saved && <span className="text-xs text-emerald-400 font-medium">✓ Enregistré</span>}
-          </div>
+  {data && !saved && (
+    <button
+      onClick={handleSave}
+      className="text-xs bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+    >
+      Enregistrer les résultats
+    </button>
+  )}
+  {saved && (
+    <span className="text-xs text-emerald-400 font-medium">✓ Enregistré</span>
+  )}
+  {workflowId && stepId && data && (
+    <button
+      onClick={handleCompleteStep}
+      disabled={completingStep}
+      className="text-xs bg-[#7C5CFC] hover:bg-[#6B4FDB] disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+    >
+      {completingStep ? "En cours…" : "Terminer cette étape →"}
+    </button>
+  )}
+</div>
         </div>
       </div>
 
