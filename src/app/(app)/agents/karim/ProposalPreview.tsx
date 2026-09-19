@@ -37,7 +37,7 @@ export function ProposalPreview({ proposal, prospectName, brandName }: Props) {
           <div>
             <p className="text-gray-400 text-xs uppercase tracking-widest mb-1">Proposition commerciale</p>
             <h2 className="text-white text-lg font-bold">{brandName || "Votre entreprise"}</h2>
-            <p className="text-gray-400 text-sm mt-0.5">À l'attention de <span className="text-white font-medium">{prospectName}</span></p>
+            <p className="text-gray-400 text-sm mt-0.5">À l&apos;attention de <span className="text-white font-medium">{prospectName}</span></p>
           </div>
           <div className="text-right">
             <p className="text-amber-400 text-xs font-semibold">{proposal.validity}</p>

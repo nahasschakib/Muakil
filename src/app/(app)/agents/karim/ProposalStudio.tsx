@@ -1,6 +1,6 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProposalPreview } from "./ProposalPreview";
 import { saveLivrable } from "@/app/(app)/livrables/actions";
 import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
@@ -8,6 +8,12 @@ import { useRouter } from "next/navigation";
 
 type ProspectSize = "TPE (1–9)" | "PME (10–50)" | "ETI (50–250)" | "Grande entreprise (250+)";
 
+type ProposalStudioProps = {
+  brandName?: string;
+  workflowId?: string;
+  stepId?: string;
+  previousOutput?: Record<string, unknown> | null;
+}
 const prospectSizes: ProspectSize[] = ["TPE (1–9)", "PME (10–50)", "ETI (50–250)", "Grande entreprise (250+)"];
 
 const budgetRanges = [
@@ -20,15 +26,12 @@ const budgetRanges = [
 
 type Proposal = any;
 
-type ProposalStudioProps = {
-  brandName?: string
-  workflowId?: string
-  stepId?: string
-}
 
-export function ProposalStudio({ brandName, workflowId, stepId }: ProposalStudioProps) {
+
+export function ProposalStudio({ brandName, workflowId, stepId, previousOutput }: ProposalStudioProps) {
   const [prospectName, setProspectName] = useState("");
-  const [prospectSector, setProspectSector] = useState("");
+  const [prospectSector, setProspectSector] = useState((previousOutput?.prospectSector as string) ?? "");
+  const [prospectRole, setProspectRole] = useState((previousOutput?.prospectRole as string) ?? "");
   const [prospectSize, setProspectSize] = useState<ProspectSize>("PME (10–50)");
   const [problem, setProblem] = useState("");
   const [services, setServices] = useState("");
@@ -52,13 +55,52 @@ export function ProposalStudio({ brandName, workflowId, stepId }: ProposalStudio
     router.push(`/workflows/${workflowId}`);
   }
 
-  async function handleGenerate() {
+
+  async function autoGenerate(sector: string, role: string) {
+    const problemCtx = (previousOutput as any)?.brief?.bant?.need ?? "";
+    const servicesCtx = (previousOutput as any)?.brief?.summary ?? "";
+    const nameCtx = role;
+
+    setLoading(true);
+    setProposal(null);
+    setError(null);
+    try {
+      const res = await fetch("/api/agents/karim/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prospectName: nameCtx,
+          prospectSector: sector,
+          prospectSize,
+          problem: problemCtx,
+          services: servicesCtx,
+          budget,
+          deadline,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) setProposal(data.proposal);
+      else setError("Erreur lors de la génération. Réessayez.");
+    } catch {
+      setError("Erreur réseau.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (previousOutput?.prospectSector && previousOutput?.prospectRole) {
+      setTimeout(() => autoGenerate(String(previousOutput.prospectSector), String(previousOutput.prospectRole)), 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+    async function handleGenerate() {
     if (!prospectName.trim() || !problem.trim() || !services.trim()) return;
     setLoading(true);
     setProposal(null);
     setError(null);
     setSaved(false);
-
     try {
       const res = await fetch("/api/agents/karim/generate", {
         method: "POST",
@@ -66,11 +108,8 @@ export function ProposalStudio({ brandName, workflowId, stepId }: ProposalStudio
         body: JSON.stringify({ prospectName, prospectSector, prospectSize, problem, services, budget, deadline }),
       });
       const data = await res.json();
-      if (data.success) {
-        setProposal(data.proposal);
-      } else {
-        setError("Erreur lors de la génération. Réessayez.");
-      }
+      if (data.success) setProposal(data.proposal);
+      else setError("Erreur lors de la génération. Réessayez.");
     } catch {
       setError("Erreur réseau.");
     } finally {
@@ -239,3 +278,5 @@ _${proposal.validity}_
     </div>
   );
 }
+
+

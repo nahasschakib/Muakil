@@ -1,6 +1,7 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EmailPreview from "./EmailPreview";
 import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
 import { useRouter } from "next/navigation";
@@ -17,12 +18,19 @@ type EmailStudioProps = {
   orgId: string
   workflowId?: string
   stepId?: string
+  previousOutput?: Record<string, any> | null
 }
 
-export default function EmailStudio({ orgId, workflowId, stepId }: EmailStudioProps) {
-  const [objet, setObjet] = useState("");
+export default function EmailStudio({ orgId, workflowId, stepId, previousOutput }: EmailStudioProps) {
+  const [objet, setObjet] = useState(
+  previousOutput?.prospectName 
+    ? `Proposition commerciale — ${previousOutput.prospectName}` 
+    : previousOutput?.prospectSector 
+      ? `Proposition commerciale — ${previousOutput.prospectSector}`
+      : ""
+);
   const [destinataire, setDestinataire] = useState(DESTINATAIRES[0]);
-  const [contexte, setContexte] = useState("");
+  const [contexte, setContexte] = useState(previousOutput?.prospectSector ? `Secteur : ${previousOutput.prospectSector}` : "");
   const [ton, setTon] = useState(TONS[0]);
   const [typeOutput, setTypeOutput] = useState("email");
   const [loading, setLoading] = useState(false);
@@ -31,16 +39,42 @@ export default function EmailStudio({ orgId, workflowId, stepId }: EmailStudioPr
   const router = useRouter();
 
   async function handleCompleteStep() {
-  if (!workflowId || !stepId || !result) return;
-  setCompletingStep(true);
-  await completeWorkflowStep(workflowId, stepId, {
-    typeOutput,
-    objet,
-    destinataire,
-    result: JSON.parse(JSON.stringify(result)),
-  });
-  router.push(`/workflows/${workflowId}`);
-}
+    if (!workflowId || !stepId || !result) return;
+    setCompletingStep(true);
+    await completeWorkflowStep(workflowId, stepId, {
+      typeOutput,
+      objet,
+      destinataire,
+      result: JSON.parse(JSON.stringify(result)),
+    });
+    router.push(`/workflows/${workflowId}`);
+  }
+
+  async function autoGenerate(objetCtx: string, contexteCtx: string) {
+    setLoading(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/agents/samia/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ objet: objetCtx, destinataire, contexte: contexteCtx, ton, typeOutput }),
+      });
+      const data = await res.json();
+      setResult(data);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+  if (previousOutput?.prospectSector) {
+    const name = previousOutput.prospectName || previousOutput.prospectSector;
+    const objetCtx = `Proposition commerciale — ${name}`;
+    const contexteCtx = `Secteur : ${previousOutput.prospectSector}`;
+    setTimeout(() => autoGenerate(objetCtx, contexteCtx), 0);
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
   const generate = async () => {
     if (!objet.trim()) return;
