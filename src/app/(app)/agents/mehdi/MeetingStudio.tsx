@@ -1,8 +1,11 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState } from "react";
 import { MeetingPreview } from "./MeetingPreview";
 import { saveLivrable } from "@/app/(app)/livrables/actions";
+import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
+import { useRouter } from "next/navigation";
 
 type MeetingType = "Premier RDV" | "Démo produit" | "Négociation" | "Suivi client" | "Réunion de closing";
 type Objective = "Qualifier le prospect" | "Présenter la solution" | "Obtenir un engagement" | "Fidéliser" | "Réactiver";
@@ -25,7 +28,12 @@ const objectives: Objective[] = [
 
 type Brief = any;
 
-export function MeetingStudio() {
+type MeetingStudioProps = {
+  workflowId?: string
+  stepId?: string
+}
+
+export function MeetingStudio({ workflowId, stepId }: MeetingStudioProps) {
   const [meetingType, setMeetingType] = useState<MeetingType>("Premier RDV");
   const [prospectSector, setProspectSector] = useState("");
   const [prospectRole, setProspectRole] = useState("");
@@ -35,6 +43,20 @@ export function MeetingStudio() {
   const [brief, setBrief] = useState<Brief | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [completingStep, setCompletingStep] = useState(false);
+  const router = useRouter();
+
+  async function handleCompleteStep() {
+    if (!workflowId || !stepId || !brief) return;
+    setCompletingStep(true);
+    await completeWorkflowStep(workflowId, stepId, {
+      meetingType,
+      prospectSector,
+      prospectRole,
+      brief,
+    });
+    router.push(`/workflows/${workflowId}`);
+  }
 
   async function handleGenerate() {
     if (!prospectSector.trim() || !prospectRole.trim()) return;
@@ -95,16 +117,11 @@ ${brief.objections.map((o: any) => `- ⚠ ${o.objection}\n  → ${o.reponse}`).j
 
   return (
     <div className="min-h-screen bg-[#0F1117] text-white">
-      {/* Header */}
       <div className="border-b border-[#2A2D3E] bg-[#1C1F2E]/60 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-700 flex items-center justify-center text-sm font-bold">
-            M
-          </div>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-700 flex items-center justify-center text-sm font-bold">M</div>
           <div>
-            <h1 className="font-semibold text-sm text-white" style={{ fontFamily: "'Bricolage Grotesque', Inter, sans-serif" }}>
-              Studio Mehdi
-            </h1>
+            <h1 className="font-semibold text-sm text-white" style={{ fontFamily: "'Bricolage Grotesque', Inter, sans-serif" }}>Studio Mehdi</h1>
             <p className="text-xs text-gray-500">MeetingStudio — Préparation de réunions B2B & qualification BANT</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
@@ -114,26 +131,24 @@ ${brief.objections.map((o: any) => `- ⚠ ${o.objection}\n  → ${o.reponse}`).j
               </button>
             )}
             {saved && <span className="text-xs text-emerald-400 font-medium">✓ Enregistré</span>}
+            {workflowId && stepId && brief && (
+              <button onClick={handleCompleteStep} disabled={completingStep}
+                className="text-xs bg-[#7C5CFC] hover:bg-[#6B4FDB] disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                {completingStep ? "En cours…" : "Terminer cette étape →"}
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-5 gap-8">
-
-        {/* Formulaire (2/5) */}
         <div className="lg:col-span-2 space-y-5">
-
-          {/* Type de réunion */}
           <section className="space-y-3">
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Type de réunion</h2>
             <div className="space-y-2">
               {meetingTypes.map((m) => (
                 <button key={m.id} onClick={() => setMeetingType(m.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
-                    meetingType === m.id
-                      ? "border-indigo-500 bg-indigo-500/10"
-                      : "border-[#2A2D3E] bg-[#1C1F2E] hover:border-[#3A3D4E]"
-                  }`}>
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${meetingType === m.id ? "border-indigo-500 bg-indigo-500/10" : "border-[#2A2D3E] bg-[#1C1F2E] hover:border-[#3A3D4E]"}`}>
                   <span className="text-lg">{m.emoji}</span>
                   <div>
                     <p className="text-sm font-medium text-white">{m.id}</p>
@@ -144,8 +159,6 @@ ${brief.objections.map((o: any) => `- ⚠ ${o.objection}\n  → ${o.reponse}`).j
               ))}
             </div>
           </section>
-
-          {/* Prospect */}
           <section className="space-y-2">
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Prospect</h2>
             <input value={prospectSector} onChange={(e) => setProspectSector(e.target.value)}
@@ -155,34 +168,23 @@ ${brief.objections.map((o: any) => `- ⚠ ${o.objection}\n  → ${o.reponse}`).j
               placeholder="Poste (ex : Directeur Général, DAF…)"
               className="w-full bg-[#1C1F2E] border border-[#2A2D3E] rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition-colors" />
           </section>
-
-          {/* Contexte */}
           <section className="space-y-2">
-            <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
-              Contexte connu <span className="text-gray-600 font-normal normal-case">(optionnel)</span>
-            </label>
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Contexte connu <span className="text-gray-600 font-normal normal-case">(optionnel)</span></label>
             <textarea value={prospectContext} onChange={(e) => setProspectContext(e.target.value)} rows={3}
               placeholder="Ce que vous savez déjà du prospect, ses enjeux, une conversation précédente…"
               className="w-full bg-[#1C1F2E] border border-[#2A2D3E] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-indigo-500 transition-colors" />
           </section>
-
-          {/* Objectif */}
           <section className="space-y-2">
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Objectif</h2>
             <div className="space-y-1">
               {objectives.map((o) => (
                 <button key={o} onClick={() => setObjective(o)}
-                  className={`w-full text-left text-xs px-3 py-2 rounded-lg border font-medium transition-all ${
-                    objective === o
-                      ? "border-indigo-500 bg-indigo-500/20 text-indigo-300"
-                      : "border-[#2A2D3E] text-gray-400 hover:border-gray-500"
-                  }`}>
+                  className={`w-full text-left text-xs px-3 py-2 rounded-lg border font-medium transition-all ${objective === o ? "border-indigo-500 bg-indigo-500/20 text-indigo-300" : "border-[#2A2D3E] text-gray-400 hover:border-gray-500"}`}>
                   {o}
                 </button>
               ))}
             </div>
           </section>
-
           <button onClick={handleGenerate} disabled={loading || !prospectSector.trim() || !prospectRole.trim()}
             className="w-full py-3 rounded-xl font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-indigo-600 hover:bg-indigo-500 text-white">
             {loading ? (
@@ -192,20 +194,12 @@ ${brief.objections.map((o: any) => `- ⚠ ${o.objection}\n  → ${o.reponse}`).j
               </span>
             ) : "Préparer la réunion"}
           </button>
-
           {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
         </div>
-
-        {/* Aperçu (3/5) */}
         <div className="lg:col-span-3">
           {brief ? (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <MeetingPreview
-                brief={brief}
-                meetingType={meetingType}
-                prospectRole={prospectRole}
-                prospectSector={prospectSector}
-              />
+              <MeetingPreview brief={brief} meetingType={meetingType} prospectRole={prospectRole} prospectSector={prospectSector} />
             </div>
           ) : (
             <div className="h-full min-h-64 flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-[#2A2D3E] p-12">

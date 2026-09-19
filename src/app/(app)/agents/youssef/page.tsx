@@ -3,7 +3,11 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { ProspectStudio } from "./ProspectStudio";
 
-export default async function YoussefStudioPage() {
+export default async function YoussefStudioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ workflowId?: string; stepId?: string }>
+}) {
   const { orgId } = await auth();
   if (!orgId) redirect("/sign-in");
 
@@ -14,5 +18,7 @@ export default async function YoussefStudioPage() {
 
   if (!org?.brandKit) redirect("/onboarding");
 
-  return <ProspectStudio />;
+  const { workflowId, stepId } = await searchParams;
+
+  return <ProspectStudio workflowId={workflowId} stepId={stepId} />;
 }

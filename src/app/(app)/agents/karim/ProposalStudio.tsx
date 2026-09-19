@@ -1,8 +1,10 @@
 "use client";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { ProposalPreview } from "./ProposalPreview";
 import { saveLivrable } from "@/app/(app)/livrables/actions";
+import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
+import { useRouter } from "next/navigation";
 
 type ProspectSize = "TPE (1–9)" | "PME (10–50)" | "ETI (50–250)" | "Grande entreprise (250+)";
 
@@ -18,7 +20,13 @@ const budgetRanges = [
 
 type Proposal = any;
 
-export function ProposalStudio({ brandName }: { brandName?: string }) {
+type ProposalStudioProps = {
+  brandName?: string
+  workflowId?: string
+  stepId?: string
+}
+
+export function ProposalStudio({ brandName, workflowId, stepId }: ProposalStudioProps) {
   const [prospectName, setProspectName] = useState("");
   const [prospectSector, setProspectSector] = useState("");
   const [prospectSize, setProspectSize] = useState<ProspectSize>("PME (10–50)");
@@ -30,6 +38,19 @@ export function ProposalStudio({ brandName }: { brandName?: string }) {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [completingStep, setCompletingStep] = useState(false);
+  const router = useRouter();
+
+  async function handleCompleteStep() {
+    if (!workflowId || !stepId || !proposal) return;
+    setCompletingStep(true);
+    await completeWorkflowStep(workflowId, stepId, {
+      prospectName,
+      prospectSector,
+      proposal,
+    });
+    router.push(`/workflows/${workflowId}`);
+  }
 
   async function handleGenerate() {
     if (!prospectName.trim() || !problem.trim() || !services.trim()) return;
@@ -122,6 +143,12 @@ _${proposal.validity}_
               </button>
             )}
             {saved && <span className="text-xs text-emerald-400 font-medium">✓ Enregistrée</span>}
+            {workflowId && stepId && proposal && (
+              <button onClick={handleCompleteStep} disabled={completingStep}
+                className="text-xs bg-[#7C5CFC] hover:bg-[#6B4FDB] disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                {completingStep ? "En cours…" : "Terminer cette étape →"}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -130,8 +157,6 @@ _${proposal.validity}_
 
         {/* Formulaire (2/5) */}
         <div className="lg:col-span-2 space-y-5">
-
-          {/* Prospect */}
           <section className="space-y-2">
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Prospect</h2>
             <input value={prospectName} onChange={(e) => setProspectName(e.target.value)}
@@ -141,58 +166,40 @@ _${proposal.validity}_
               placeholder="Secteur d'activité"
               className="w-full bg-[#1C1F2E] border border-[#2A2D3E] rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition-colors" />
           </section>
-
-          {/* Taille */}
           <section className="space-y-2">
             <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Taille</h2>
             <div className="flex flex-wrap gap-2">
               {prospectSizes.map((s) => (
                 <button key={s} onClick={() => setProspectSize(s)}
                   className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all ${
-                    prospectSize === s
-                      ? "border-amber-500 bg-amber-500/20 text-amber-300"
-                      : "border-[#2A2D3E] text-gray-400 hover:border-gray-500"
-                  }`}>
-                  {s}
-                </button>
+                    prospectSize === s ? "border-amber-500 bg-amber-500/20 text-amber-300" : "border-[#2A2D3E] text-gray-400 hover:border-gray-500"
+                  }`}>{s}</button>
               ))}
             </div>
           </section>
-
-          {/* Problème */}
           <section className="space-y-2">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Problème identifié</label>
             <textarea value={problem} onChange={(e) => setProblem(e.target.value)} rows={3}
               placeholder="Quel problème ou besoin avez-vous identifié chez ce prospect ?"
               className="w-full bg-[#1C1F2E] border border-[#2A2D3E] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-amber-500 transition-colors" />
           </section>
-
-          {/* Services */}
           <section className="space-y-2">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Services à proposer</label>
             <textarea value={services} onChange={(e) => setServices(e.target.value)} rows={3}
               placeholder="Ex : Comptabilité mensuelle, audit, conseil fiscal, digitalisation…"
               className="w-full bg-[#1C1F2E] border border-[#2A2D3E] rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-amber-500 transition-colors" />
           </section>
-
-          {/* Budget */}
           <section className="space-y-2">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Budget évoqué</label>
             <div className="space-y-1">
               {budgetRanges.map((b) => (
                 <button key={b} onClick={() => setBudget(b)}
                   className={`w-full text-left text-xs px-3 py-2 rounded-lg border font-medium transition-all ${
-                    budget === b
-                      ? "border-amber-500 bg-amber-500/20 text-amber-300"
-                      : "border-[#2A2D3E] text-gray-400 hover:border-gray-500"
-                  }`}>
-                  {b}
-                </button>
+                    budget === b ? "border-amber-500 bg-amber-500/20 text-amber-300" : "border-[#2A2D3E] text-gray-400 hover:border-gray-500"
+                  }`}>{b}</button>
               ))}
             </div>
           </section>
-
-          {/* Délai */}
           <section className="space-y-2">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
               Délai souhaité <span className="text-gray-600 font-normal normal-case">(optionnel)</span>
@@ -201,7 +208,6 @@ _${proposal.validity}_
               placeholder="Ex : Démarrage janvier 2026, urgent…"
               className="w-full bg-[#1C1F2E] border border-[#2A2D3E] rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-amber-500 transition-colors" />
           </section>
-
           <button onClick={handleGenerate}
             disabled={loading || !prospectName.trim() || !problem.trim() || !services.trim()}
             className="w-full py-3 rounded-xl font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-amber-600 hover:bg-amber-500 text-white">
@@ -212,7 +218,6 @@ _${proposal.validity}_
               </span>
             ) : "Générer la proposition"}
           </button>
-
           {error && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
         </div>
 
