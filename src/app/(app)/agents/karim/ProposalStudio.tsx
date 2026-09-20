@@ -10,6 +10,8 @@ type ProspectSize = "TPE (1–9)" | "PME (10–50)" | "ETI (50–250)" | "Grande
 
 type ProposalStudioProps = {
   brandName?: string;
+  sector?: string;
+  prospectNameFromNour?: string;
   workflowId?: string;
   stepId?: string;
   previousOutput?: Record<string, unknown> | null;
@@ -28,9 +30,9 @@ type Proposal = any;
 
 
 
-export function ProposalStudio({ brandName, workflowId, stepId, previousOutput }: ProposalStudioProps) {
-  const [prospectName, setProspectName] = useState("");
-  const [prospectSector, setProspectSector] = useState((previousOutput?.prospectSector as string) ?? "");
+export function ProposalStudio({ brandName, sector, prospectNameFromNour, workflowId, stepId, previousOutput }: ProposalStudioProps) {
+ const [prospectName, setProspectName] = useState(prospectNameFromNour ?? "");
+  const [prospectSector, setProspectSector] = useState((previousOutput?.prospectSector as string) ?? sector ?? "");
   const [prospectRole, setProspectRole] = useState((previousOutput?.prospectRole as string) ?? "");
   const [prospectSize, setProspectSize] = useState<ProspectSize>("PME (10–50)");
   const [problem, setProblem] = useState("");

@@ -19,7 +19,41 @@ const moroccanCities = [
   "Meknès", "Oujda", "Kenitra", "Tétouan", "Salé", "Mohammedia",
 ];
 
-type SearchData = any;
+type ProspectResult = {
+  nom: string;
+  dirigeant?: string;
+  secteur?: string;
+  ville?: string;
+  telephone?: string;
+  email?: string;
+  site?: string;
+  description?: string;
+  source?: string;
+};
+
+type ActualiteResult = {
+  titre: string;
+  source: string;
+  url: string;
+  date?: string;
+  resume: string;
+  pertinence?: string;
+};
+
+type MarcheResult = {
+  titre: string;
+  detail: string;
+  source?: string;
+  impact?: string;
+};
+
+type SearchData = {
+  type: string;
+  query: string;
+  results: (ProspectResult | ActualiteResult | MarcheResult)[];
+  total: number;
+  tip?: string;
+};
 
 type ResearchStudioProps = {
   workflowId?: string
@@ -39,16 +73,21 @@ export function ResearchStudio({ workflowId, stepId }: ResearchStudioProps) {
   const [completingStep, setCompletingStep] = useState(false)
 
   async function handleCompleteStep() {
-    if (!workflowId || !stepId || !data) return
-    setCompletingStep(true)
-    await completeWorkflowStep(workflowId, stepId, {
-      searchType,
-      query,
-      city,
-      results: data,
-    })
-    router.push(`/workflows/${workflowId}`)
-  }
+  if (!workflowId || !stepId || !data) return
+  setCompletingStep(true)
+  const firstProspect = data.type === "prospects" && data.results.length > 0
+    ? (data.results[0] as ProspectResult)
+    : null
+  await completeWorkflowStep(workflowId, stepId, {
+    searchType,
+    query,
+    city,
+    results: data,
+    prospectName: firstProspect?.nom ?? "",
+    prospectSector: firstProspect?.secteur ?? query,
+  })
+  router.push(`/workflows/${workflowId}`)
+}
 
   async function handleSearch() {
     if (!query.trim()) return;
@@ -79,7 +118,7 @@ export function ResearchStudio({ workflowId, stepId }: ResearchStudioProps) {
   async function handleSave() {
     if (!data) return;
     const content = `## Recherche ${data.type} — ${data.query}\n\n${data.results
-      .map((r: any) =>
+      .map((r) =>
         Object.entries(r)
           .filter(([, v]) => v)
           .map(([k, v]) => `**${k}:** ${v}`)

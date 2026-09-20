@@ -20,5 +20,11 @@ export default async function YoussefStudioPage({
 
   const { workflowId, stepId } = await searchParams;
 
-  return <ProspectStudio workflowId={workflowId} stepId={stepId} />;
+  return (
+    <ProspectStudio
+      workflowId={workflowId}
+      stepId={stepId}
+      brandKit={org.brandKit}
+    />
+  );
 }

@@ -20,19 +20,33 @@ export default async function KarimStudioPage({
   const { workflowId, stepId } = await searchParams;
 
   let previousOutput: Record<string, unknown> | null = null;
+  let prospectNameFromNour = "";
+
   if (workflowId) {
-    const mehdiStep = await db.workflowStep.findFirst({
-      where: { workflowId, order: 2, status: "COMPLETED" },
-      select: { output: true },
-    });
+    const [mehdiStep, nourStep] = await Promise.all([
+      db.workflowStep.findFirst({
+        where: { workflowId, order: 2, status: "COMPLETED" },
+        select: { output: true },
+      }),
+      db.workflowStep.findFirst({
+        where: { workflowId, order: 0, status: "COMPLETED" },
+        select: { output: true },
+      }),
+    ]);
     if (mehdiStep?.output) {
       previousOutput = mehdiStep.output as Record<string, unknown>;
+    }
+    if (nourStep?.output) {
+      const nourOutput = nourStep.output as Record<string, unknown>;
+      prospectNameFromNour = (nourOutput.prospectName as string) ?? "";
     }
   }
 
   return (
     <ProposalStudio
       brandName={org.brandKit.brandName}
+      sector={org.brandKit.sector}
+      prospectNameFromNour={prospectNameFromNour}
       workflowId={workflowId}
       stepId={stepId}
       previousOutput={previousOutput}

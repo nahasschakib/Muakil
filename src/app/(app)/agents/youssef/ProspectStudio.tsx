@@ -5,6 +5,9 @@ import { SequencePreview } from "./SequencePreview";
 import { saveLivrable } from "@/app/(app)/livrables/actions";
 import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
 import { useRouter } from "next/navigation";
+import type { BrandKit } from "@prisma/client";
+
+
 
 type Channel = "WhatsApp" | "LinkedIn" | "Email" | "SMS";
 type Objective = "Décrocher un RDV" | "Présenter une offre" | "Demander une démo" | "Relancer un prospect froid";
@@ -36,16 +39,17 @@ const companySizes = ["TPE (1–9)", "PME (10–50)", "ETI (50–250)", "Grande 
 type ProspectStudioProps = {
   workflowId?: string
   stepId?: string
+  brandKit?: BrandKit | null
 }
 
-export function ProspectStudio({ workflowId, stepId }: ProspectStudioProps) {
+export function ProspectStudio({ workflowId, stepId, brandKit }: ProspectStudioProps) {
   const [channel, setChannel] = useState<Channel>("WhatsApp");
-  const [sector, setSector] = useState("");
+  const [sector, setSector] = useState(brandKit?.sector ?? "");
+  const [tone, setTone] = useState<Tone>((brandKit?.tone as Tone) ?? "Professionnel");
   const [prospectRole, setProspectRole] = useState("");
   const [companySize, setCompanySize] = useState("PME (10–50)");
   const [objective, setObjective] = useState<Objective>("Décrocher un RDV");
-  const [tone, setTone] = useState<Tone>("Professionnel");
-  const [loading, setLoading] = useState(false);
+   const [loading, setLoading] = useState(false);
   const [sequence, setSequence] = useState<Sequence | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);

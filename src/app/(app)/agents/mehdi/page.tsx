@@ -35,6 +35,7 @@ export default async function MehdiStudioPage({
     workflowId={workflowId}
     stepId={stepId}
     previousOutput={previousOutput}
+    brandKit={org.brandKit}
   />
   );
 }

@@ -6,6 +6,7 @@ import { MeetingPreview } from "./MeetingPreview";
 import { saveLivrable } from "@/app/(app)/livrables/actions";
 import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
 import { useRouter } from "next/navigation";
+import type { BrandKit } from "@prisma/client";
 
 type MeetingType = "Premier RDV" | "Démo produit" | "Négociation" | "Suivi client" | "Réunion de closing";
 type Objective = "Qualifier le prospect" | "Présenter la solution" | "Obtenir un engagement" | "Fidéliser" | "Réactiver";
@@ -32,11 +33,12 @@ type MeetingStudioProps = {
   workflowId?: string
   stepId?: string
   previousOutput?: Record<string, unknown> | null
+  brandKit?: BrandKit| null
 }
 
-export function MeetingStudio({ workflowId, stepId, previousOutput }: MeetingStudioProps){
+export function MeetingStudio({ workflowId, stepId, previousOutput,brandKit }: MeetingStudioProps){
   const [meetingType, setMeetingType] = useState<MeetingType>("Premier RDV");
-  const [prospectSector, setProspectSector] = useState((previousOutput?.sector as string) ?? "");
+  const [prospectSector, setProspectSector] = useState((previousOutput?.sector as string) ?? brandKit?.sector ?? "");
   const [prospectRole, setProspectRole] = useState((previousOutput?.prospectRole as string) ?? "");
   const [prospectContext, setProspectContext] = useState("");
   const [objective, setObjective] = useState<Objective>("Qualifier le prospect");
