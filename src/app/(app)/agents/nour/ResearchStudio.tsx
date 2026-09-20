@@ -9,16 +9,52 @@ import type { BrandKit } from "@prisma/client";
 
 type SearchType = "prospects" | "concurrents" | "actualites" | "marche";
 
-const searchTypes: { id: SearchType; emoji: string; label: string; desc: string }[] = [
-  { id: "prospects", emoji: "🎯", label: "Prospects", desc: "Clients potentiels à contacter" },
-  { id: "concurrents", emoji: "🔍", label: "Concurrents", desc: "Analyse concurrentielle réelle" },
-  { id: "actualites", emoji: "📰", label: "Actualités", desc: "News et tendances sectorielles" },
-  { id: "marche", emoji: "📊", label: "Marché", desc: "Données et opportunités marché" },
+const searchTypes: {
+  id: SearchType;
+  emoji: string;
+  label: string;
+  desc: string;
+}[] = [
+  {
+    id: "prospects",
+    emoji: "🎯",
+    label: "Prospects",
+    desc: "Clients potentiels à contacter",
+  },
+  {
+    id: "concurrents",
+    emoji: "🔍",
+    label: "Concurrents",
+    desc: "Analyse concurrentielle réelle",
+  },
+  {
+    id: "actualites",
+    emoji: "📰",
+    label: "Actualités",
+    desc: "News et tendances sectorielles",
+  },
+  {
+    id: "marche",
+    emoji: "📊",
+    label: "Marché",
+    desc: "Données et opportunités marché",
+  },
 ];
 
 const moroccanCities = [
-  "Casablanca", "Rabat", "Marrakech", "Fès", "Tanger", "Agadir",
-  "Meknès", "Oujda", "Kenitra", "Tétouan", "Salé", "Mohammedia",
+  "Tout le Maroc",
+  "Casablanca",
+  "Rabat",
+  "Marrakech",
+  "Fès",
+  "Tanger",
+  "Agadir",
+  "Meknès",
+  "Oujda",
+  "Kenitra",
+  "Tétouan",
+  "Salé",
+  "Mohammedia",
 ];
 
 type ProspectResult = {
@@ -58,39 +94,47 @@ type SearchData = {
 };
 
 type ResearchStudioProps = {
-  workflowId?: string
-  stepId?: string
-  brandKit?: BrandKit | null
-}
+  workflowId?: string;
+  stepId?: string;
+  brandKit?: BrandKit | null;
+};
 
-export function ResearchStudio({ workflowId, stepId, brandKit }: ResearchStudioProps) {
+export function ResearchStudio({
+  workflowId,
+  stepId,
+  brandKit,
+}: ResearchStudioProps) {
   const [searchType, setSearchType] = useState<SearchType>("prospects");
   const [query, setQuery] = useState("");
-   const [city, setCity] = useState(brandKit?.city ?? "Casablanca");
-   const [sector, setSector] = useState(brandKit?.sector ?? "");
+  const [city, setCity] = useState(brandKit?.city ?? "Casablanca");
+  const [sector, setSector] = useState(brandKit?.sector ?? "");
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<SearchData | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router =useRouter()
-  const [completingStep, setCompletingStep] = useState(false)
+  const router = useRouter();
+  const [completingStep, setCompletingStep] = useState(false);
+  const [selectedProspect, setSelectedProspect] = useState<string | null>(null);
 
   async function handleCompleteStep() {
-  if (!workflowId || !stepId || !data) return
-  setCompletingStep(true)
-  const firstProspect = data.type === "prospects" && data.results.length > 0
-    ? (data.results[0] as ProspectResult)
-    : null
-  await completeWorkflowStep(workflowId, stepId, {
-    searchType,
-    query,
-    city,
-    results: data,
-    prospectName: firstProspect?.nom ?? "",
-    prospectSector: firstProspect?.secteur ?? query,
-  })
-  router.push(`/workflows/${workflowId}`)
-}
+    if (!workflowId || !stepId || !data) return;
+    setCompletingStep(true);
+    const firstProspect =
+      data.type === "prospects" && data.results.length > 0
+        ? (data.results[0] as ProspectResult)
+        : null;
+    const chosenName = selectedProspect ?? firstProspect?.nom ?? "";
+    const chosenSector = firstProspect?.secteur ?? query;
+    await completeWorkflowStep(workflowId, stepId, {
+      searchType,
+      query,
+      city,
+      results: data,
+      prospectName: chosenName,
+      prospectSector: chosenSector,
+    });
+    router.push(`/workflows/${workflowId}`);
+  }
 
   async function handleSearch() {
     if (!query.trim()) return;
@@ -125,7 +169,7 @@ export function ResearchStudio({ workflowId, stepId, brandKit }: ResearchStudioP
         Object.entries(r)
           .filter(([, v]) => v)
           .map(([k, v]) => `**${k}:** ${v}`)
-          .join("\n")
+          .join("\n"),
       )
       .join("\n\n---\n\n")}\n\n💡 **Conseil :** ${data.tip}`;
 
@@ -146,44 +190,51 @@ export function ResearchStudio({ workflowId, stepId, brandKit }: ResearchStudioP
             N
           </div>
           <div>
-            <h1 className="font-semibold text-sm text-white" style={{ fontFamily: "'Bricolage Grotesque', Inter, sans-serif" }}>
+            <h1
+              className="font-semibold text-sm text-white"
+              style={{ fontFamily: "'Bricolage Grotesque', Inter, sans-serif" }}
+            >
               Studio Nour
             </h1>
-            <p className="text-xs text-gray-500">ResearchStudio — Veille & recherche web en temps réel</p>
+            <p className="text-xs text-gray-500">
+              ResearchStudio — Veille & recherche web en temps réel
+            </p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-  {data && !saved && (
-    <button
-      onClick={handleSave}
-      className="text-xs bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-    >
-      Enregistrer les résultats
-    </button>
-  )}
-  {saved && (
-    <span className="text-xs text-emerald-400 font-medium">✓ Enregistré</span>
-  )}
-  {workflowId && stepId && data && (
-    <button
-      onClick={handleCompleteStep}
-      disabled={completingStep}
-      className="text-xs bg-[#7C5CFC] hover:bg-[#6B4FDB] disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-    >
-      {completingStep ? "En cours…" : "Terminer cette étape →"}
-    </button>
-  )}
-</div>
+            {data && !saved && (
+              <button
+                onClick={handleSave}
+                className="text-xs bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Enregistrer les résultats
+              </button>
+            )}
+            {saved && (
+              <span className="text-xs text-emerald-400 font-medium">
+                ✓ Enregistré
+              </span>
+            )}
+            {workflowId && stepId && data && (
+              <button
+                onClick={handleCompleteStep}
+                disabled={completingStep}
+                className="text-xs bg-[#7C5CFC] hover:bg-[#6B4FDB] disabled:opacity-50 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                {completingStep ? "En cours…" : "Terminer cette étape →"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-5 gap-8">
-
         {/* Formulaire (2/5) */}
         <div className="lg:col-span-2 space-y-5">
-
           {/* Type de recherche */}
           <section className="space-y-3">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Type de recherche</h2>
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              Type de recherche
+            </h2>
             <div className="space-y-2">
               {searchTypes.map((t) => (
                 <button
@@ -200,7 +251,9 @@ export function ResearchStudio({ workflowId, stepId, brandKit }: ResearchStudioP
                     <p className="text-sm font-medium text-white">{t.label}</p>
                     <p className="text-xs text-gray-500">{t.desc}</p>
                   </div>
-                  {searchType === t.id && <span className="ml-auto w-2 h-2 rounded-full bg-pink-400" />}
+                  {searchType === t.id && (
+                    <span className="ml-auto w-2 h-2 rounded-full bg-pink-400" />
+                  )}
                 </button>
               ))}
             </div>
@@ -209,18 +262,25 @@ export function ResearchStudio({ workflowId, stepId, brandKit }: ResearchStudioP
           {/* Recherche */}
           <section className="space-y-2">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
-              {searchType === "prospects" ? "Type de prospect" :
-               searchType === "concurrents" ? "Secteur concurrent" :
-               searchType === "actualites" ? "Sujet à surveiller" : "Marché à analyser"}
+              {searchType === "prospects"
+                ? "Type de prospect"
+                : searchType === "concurrents"
+                  ? "Secteur concurrent"
+                  : searchType === "actualites"
+                    ? "Sujet à surveiller"
+                    : "Marché à analyser"}
             </label>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={
-                searchType === "prospects" ? "Ex : cabinets comptables, promoteurs immobiliers…" :
-                searchType === "concurrents" ? "Ex : expertise comptable, audit financier…" :
-                searchType === "actualites" ? "Ex : TVA Maroc, transformation digitale PME…" :
-                "Ex : marché immobilier, e-commerce Maroc…"
+                searchType === "prospects"
+                  ? "Ex : cabinets comptables, promoteurs immobiliers…"
+                  : searchType === "concurrents"
+                    ? "Ex : expertise comptable, audit financier…"
+                    : searchType === "actualites"
+                      ? "Ex : TVA Maroc, transformation digitale PME…"
+                      : "Ex : marché immobilier, e-commerce Maroc…"
               }
               className="w-full bg-[#1C1F2E] border border-[#2A2D3E] rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-pink-500 transition-colors"
             />
@@ -228,7 +288,9 @@ export function ResearchStudio({ workflowId, stepId, brandKit }: ResearchStudioP
 
           {/* Ville */}
           <section className="space-y-2">
-            <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Ville</label>
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              Ville
+            </label>
             <div className="flex flex-wrap gap-2">
               {moroccanCities.map((c) => (
                 <button
@@ -249,7 +311,10 @@ export function ResearchStudio({ workflowId, stepId, brandKit }: ResearchStudioP
           {/* Secteur */}
           <section className="space-y-2">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
-              Secteur <span className="text-gray-600 font-normal normal-case">(optionnel)</span>
+              Secteur{" "}
+              <span className="text-gray-600 font-normal normal-case">
+                (optionnel)
+              </span>
             </label>
             <input
               value={sector}
@@ -275,7 +340,9 @@ export function ResearchStudio({ workflowId, stepId, brandKit }: ResearchStudioP
           </button>
 
           {error && (
-            <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>
+            <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              {error}
+            </p>
           )}
         </div>
 
@@ -283,13 +350,23 @@ export function ResearchStudio({ workflowId, stepId, brandKit }: ResearchStudioP
         <div className="lg:col-span-3">
           {data ? (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <ResultCards data={data} />
+              <ResultCards
+                data={data}
+                selectedProspect={workflowId ? selectedProspect : null}
+                onSelectProspect={workflowId ? setSelectedProspect : undefined}
+              />
             </div>
           ) : (
             <div className="h-full min-h-64 flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-[#2A2D3E] p-12">
-              <div className="w-14 h-14 rounded-2xl bg-[#1C1F2E] flex items-center justify-center text-2xl mb-4">🔍</div>
-              <p className="text-gray-400 text-sm font-medium">Les résultats apparaîtront ici</p>
-              <p className="text-gray-600 text-xs mt-1">Nour cherche sur internet en temps réel</p>
+              <div className="w-14 h-14 rounded-2xl bg-[#1C1F2E] flex items-center justify-center text-2xl mb-4">
+                🔍
+              </div>
+              <p className="text-gray-400 text-sm font-medium">
+                Les résultats apparaîtront ici
+              </p>
+              <p className="text-gray-600 text-xs mt-1">
+                Nour cherche sur internet en temps réel
+              </p>
             </div>
           )}
         </div>

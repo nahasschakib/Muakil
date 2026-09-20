@@ -36,18 +36,37 @@ type SearchData = {
   tip?: string;
 };
 
-type Props = { data: SearchData };
+type Props = {
+  data: SearchData;
+  selectedProspect?: string | null;
+  onSelectProspect?: (nom: string) => void;
+};
 
-function ProspectCard({ r }: { r: ProspectResult }) {
+function ProspectCard({ r, selected, onSelect }: { r: ProspectResult; selected: boolean; onSelect?: () => void }) {
   return (
-    <div className="bg-[#1C1F2E] border border-[#2A2D3E] rounded-xl p-4 hover:border-violet-500/40 transition-colors">
+    <div
+      onClick={onSelect}
+      className={`bg-[#1C1F2E] border rounded-xl p-4 transition-all ${
+        onSelect ? "cursor-pointer" : ""
+      } ${selected ? "border-pink-500 bg-pink-500/5" : "border-[#2A2D3E] hover:border-violet-500/40"}`}
+    >
       <div className="flex items-start justify-between mb-2">
-        <h3 className="font-semibold text-white text-sm leading-tight">{r.nom}</h3>
+        <div className="flex items-center gap-2 flex-1">
+          {onSelect && (
+            <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+              selected ? "border-pink-500 bg-pink-500" : "border-gray-600"
+            }`}>
+              {selected && <span className="w-2 h-2 rounded-full bg-white" />}
+            </div>
+          )}
+          <h3 className="font-semibold text-white text-sm leading-tight">{r.nom}</h3>
+        </div>
         {r.site && (
           <a
             href={r.site.startsWith("http") ? r.site : `https://${r.site}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="text-xs text-violet-400 hover:text-violet-300 ml-2 flex-shrink-0"
           >
             ↗ Site
@@ -79,7 +98,7 @@ function ProspectCard({ r }: { r: ProspectResult }) {
         {r.telephone && (
           <div className="flex items-center gap-2 text-xs">
             <span className="text-gray-500 w-16 flex-shrink-0">Tél</span>
-            <a href={`tel:${r.telephone}`} className="text-emerald-400 hover:text-emerald-300">
+            <a href={`tel:${r.telephone}`} onClick={(e) => e.stopPropagation()} className="text-emerald-400 hover:text-emerald-300">
               {r.telephone}
             </a>
           </div>
@@ -87,7 +106,7 @@ function ProspectCard({ r }: { r: ProspectResult }) {
         {r.email && (
           <div className="flex items-center gap-2 text-xs">
             <span className="text-gray-500 w-16 flex-shrink-0">Email</span>
-            <a href={`mailto:${r.email}`} className="text-blue-400 hover:text-blue-300 truncate">
+            <a href={`mailto:${r.email}`} onClick={(e) => e.stopPropagation()} className="text-blue-400 hover:text-blue-300 truncate">
               {r.email}
             </a>
           </div>
@@ -99,6 +118,7 @@ function ProspectCard({ r }: { r: ProspectResult }) {
             href={r.source}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="text-xs text-gray-600 hover:text-gray-400 truncate block"
           >
             Source : {r.source.replace(/^https?:\/\//, "").slice(0, 50)}…
@@ -115,12 +135,8 @@ function ActualiteCard({ r }: { r: ActualiteResult }) {
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-semibold text-white text-sm leading-tight flex-1">{r.titre}</h3>
         {r.url && (
-          <a
-            href={r.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-amber-400 hover:text-amber-300 ml-2 flex-shrink-0"
-          >
+          <a href={r.url} target="_blank" rel="noopener noreferrer"
+            className="text-xs text-amber-400 hover:text-amber-300 ml-2 flex-shrink-0">
             ↗ Lire
           </a>
         )}
@@ -150,12 +166,8 @@ function MarcheCard({ r }: { r: MarcheResult }) {
         </div>
       )}
       {r.source && (
-        <a
-          href={r.source}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-gray-600 hover:text-gray-400"
-        >
+        <a href={r.source} target="_blank" rel="noopener noreferrer"
+          className="text-xs text-gray-600 hover:text-gray-400">
           ↗ Source
         </a>
       )}
@@ -163,35 +175,40 @@ function MarcheCard({ r }: { r: MarcheResult }) {
   );
 }
 
-export function ResultCards({ data }: Props) {
+export function ResultCards({ data, selectedProspect, onSelectProspect }: Props) {
   const isProspect = data.type === "prospects" || data.type === "concurrents";
   const isActualite = data.type === "actualites";
 
   return (
     <div className="space-y-4">
-      {/* Header résultats */}
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs text-gray-400">
-            <span className="text-white font-semibold">{data.total}</span> résultats pour{" "}
-            <span className="text-violet-400">&quot;{data.query}&quot;</span>
-          </p>
-        </div>
+        <p className="text-xs text-gray-400">
+          <span className="text-white font-semibold">{data.total}</span> résultats pour{" "}
+          <span className="text-violet-400">&quot;{data.query}&quot;</span>
+        </p>
         <span className="text-xs text-gray-500 capitalize">{data.type}</span>
       </div>
 
-      {/* Cards */}
+      {isProspect && onSelectProspect && (
+        <p className="text-xs text-pink-400/70">👆 Cliquez sur un prospect pour le sélectionner</p>
+      )}
+
       <div className="grid grid-cols-1 gap-3">
         {data.results.map((r, i) => (
           <div key={i}>
-            {isProspect && <ProspectCard r={r as ProspectResult} />}
+            {isProspect && (
+              <ProspectCard
+                r={r as ProspectResult}
+                selected={selectedProspect === (r as ProspectResult).nom}
+                onSelect={onSelectProspect ? () => onSelectProspect((r as ProspectResult).nom) : undefined}
+              />
+            )}
             {isActualite && <ActualiteCard r={r as ActualiteResult} />}
             {!isProspect && !isActualite && <MarcheCard r={r as MarcheResult} />}
           </div>
         ))}
       </div>
 
-      {/* Conseil Nour */}
       {data.tip && (
         <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl p-4">
           <p className="text-xs text-violet-400 font-semibold mb-1">💡 Conseil de Nour</p>

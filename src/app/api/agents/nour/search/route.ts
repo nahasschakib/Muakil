@@ -8,7 +8,8 @@ const client = new Anthropic();
 
 const webSearchTool = {
   name: "web_search",
-  description: "Recherche des informations réelles sur internet — entreprises, contacts, actualités, prix du marché.",
+  description:
+    "Recherche des informations réelles sur internet — entreprises, contacts, actualités, prix du marché.",
   input_schema: {
     type: "object" as const,
     properties: {
@@ -21,13 +22,19 @@ const webSearchTool = {
 
 export async function POST(req: NextRequest) {
   const { orgId } = await auth();
-  if (!orgId) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  if (!orgId)
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const org = await db.organization.findUnique({ where: { clerkOrgId: orgId } });
-  const brandKit = org ? await db.brandKit.findUnique({ where: { organizationId: org.id } }) : null;
+  const org = await db.organization.findUnique({
+    where: { clerkOrgId: orgId },
+  });
+  const brandKit = org
+    ? await db.brandKit.findUnique({ where: { organizationId: org.id } })
+    : null;
 
   const { searchType, query, city, sector } = await req.json();
 
+  const cityStr = city === "Tout le Maroc" ? "Maroc" : `${city} Maroc`;
   const systemPrompt = `Tu es Nour, experte en recherche et veille pour le marché marocain.
 ${brandKit ? `Tu travailles pour "${brandKit.brandName}", ${brandKit.sector} basée à ${brandKit.city}.` : ""}
 
@@ -94,16 +101,16 @@ Pour MARCHE :
 
   const searchQueries: Record<string, string[]> = {
     prospects: [
-      `${query} ${city} Maroc contact téléphone site web`,
-      `${sector || query} entreprises ${city} Maroc annuaire`,
-      `${query} ${city} pages jaunes Maroc`,
-      `${query} ${city} Maroc LinkedIn dirigeant`,
+      `${query} ${cityStr} contact téléphone site web`,
+      `${sector || query} entreprises ${cityStr} annuaire`,
+      `${query} ${cityStr} pages jaunes`,
+      `${query} ${cityStr} LinkedIn dirigeant`,
     ],
     concurrents: [
-      `${query} ${city} Maroc concurrent`,
-      `${sector || query} cabinets ${city} site web`,
-      `${query} ${city} Maroc annuaire professionnel`,
-      `${query} ${city} Maroc avis clients`,
+      `${query} ${cityStr} concurrent`,
+      `${sector || query} cabinets ${cityStr} site web`,
+      `${query} ${cityStr} annuaire professionnel`,
+      `${query} ${cityStr} avis clients`,
     ],
     actualites: [
       `${query} Maroc actualité 2025 2026`,
@@ -126,7 +133,7 @@ Pour MARCHE :
       } catch {
         return `Erreur recherche: ${q}`;
       }
-    })
+    }),
   );
 
   const combinedResults = searchResults.join("\n\n---\n\n");
@@ -143,14 +150,18 @@ Pour MARCHE :
 
 ${combinedResults}
 
-Analyse ces résultats et retourne une liste structurée de ${searchType} pour : "${query}" à ${city}, secteur ${sector || "général"}.
+Analyse ces résultats et retourne une liste structurée de ${searchType} pour : "${query}" ${city === "Tout le Maroc" ? "sur tout le Maroc" : `à ${city}`}, secteur ${sector || "général"}.
 Extrais uniquement les informations réelles trouvées dans les résultats. Ne hallucine pas.`,
         },
       ],
     });
 
-    const raw = message.content[0].type === "text" ? message.content[0].text : "";
-    const clean = raw.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+    const raw =
+      message.content[0].type === "text" ? message.content[0].text : "";
+    const clean = raw
+      .replace(/^```json\s*/i, "")
+      .replace(/```\s*$/i, "")
+      .trim();
     const parsed = JSON.parse(clean);
 
     return NextResponse.json({ success: true, data: parsed });
