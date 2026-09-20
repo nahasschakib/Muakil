@@ -17,6 +17,8 @@ type Post = {
 
 type Props = {
   brandName?: string;
+  tone?: string | null;
+  icpProfile?: string | null;
 };
 
 const networks: { id: Network; emoji: string; desc: string }[] = [
@@ -27,13 +29,15 @@ const networks: { id: Network; emoji: string; desc: string }[] = [
 
 const tones: Tone[] = ["Professionnel", "Décontracté", "Inspirant", "Humoristique", "Éducatif"];
 
-export function ContentStudio({ brandName }: Props) {
+export function ContentStudio({ brandName, tone: brandTone, icpProfile }: Props) {
   const { organization } = useOrganization();
   const [network, setNetwork] = useState<Network>("Instagram");
   const [theme, setTheme] = useState("");
-  const [tone, setTone] = useState<Tone>("Professionnel");
+  const [tone, setTone] = useState<Tone>(
+    (brandTone && tones.includes(brandTone as Tone)) ? brandTone as Tone : "Professionnel"
+  );
   const [cta, setCta] = useState("");
-  const [targetAudience, setTargetAudience] = useState("");
+  const [targetAudience, setTargetAudience] = useState(icpProfile ?? "");
   const [loading, setLoading] = useState(false);
   const [post, setPost] = useState<Post | null>(null);
   const [saved, setSaved] = useState(false);

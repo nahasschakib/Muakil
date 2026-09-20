@@ -12,10 +12,12 @@ const OUTPUTS = [
   { id: "script", label: "Script appel", icon: "📞" },
 ];
 
-export default function SupportStudio({ orgId }: { orgId: string }) {
+export default function SupportStudio({ orgId, tone }: { orgId: string; tone?: string | null }) {
   const [situation, setSituation] = useState("");
   const [canal, setCanal] = useState(CANAUX[0]);
-  const [ton, setTon] = useState(TONS[0]);
+ const [ton, setTon] = useState(
+    (tone && TONS.includes(tone)) ? tone : TONS[0]
+  );
   const [langue, setLangue] = useState(LANGUES[0]);
   const [typeOutput, setTypeOutput] = useState("reclamation");
   const [loading, setLoading] = useState(false);

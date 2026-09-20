@@ -23,6 +23,7 @@ export default async function NourStudioPage({
     <ResearchStudio
       workflowId={params.workflowId}
       stepId={params.stepId}
+      brandKit={org.brandKit}
     />
   );
 }

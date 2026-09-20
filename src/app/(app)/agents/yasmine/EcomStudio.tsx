@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState } from "react";
 import { ProductPreview } from "./ProductPreview";
@@ -31,7 +32,11 @@ const categories = [
 
 type Content = any;
 
-export function EcomStudio() {
+type EcomStudioProps = {
+  icpProfile?: string | null;
+}
+
+export function EcomStudio({ icpProfile }: EcomStudioProps) {
   const [platform, setPlatform] = useState<Platform>("Instagram Shop");
   const [productName, setProductName] = useState("");
   const [category, setCategory] = useState("Mode & Vêtements");
@@ -39,7 +44,7 @@ export function EcomStudio() {
   const [season, setSeason] = useState<Season>("Toute saison");
   const [contentType, setContentType] = useState<ContentType>("les deux");
   const [description, setDescription] = useState("");
-  const [targetAudience, setTargetAudience] = useState("");
+ const [targetAudience, setTargetAudience] = useState(icpProfile ?? "");
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState<Content | null>(null);
   const [saved, setSaved] = useState(false);

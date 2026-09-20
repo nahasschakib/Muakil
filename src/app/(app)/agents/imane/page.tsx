@@ -9,8 +9,9 @@ export default async function ImanePage() {
 
   const org = await db.organization.findUnique({
     where: { clerkOrgId: orgId },
+    include: { brandKit: true },
   });
-  if (!org) redirect("/onboarding");
+  if (!org?.brandKit) redirect("/onboarding");
 
-  return <CreativeStudio orgId={org.id} />;
+  return <CreativeStudio orgId={org.id} icpProfile={org.brandKit.icpProfile} />;
 }

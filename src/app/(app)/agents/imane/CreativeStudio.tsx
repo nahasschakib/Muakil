@@ -11,9 +11,9 @@ const OUTPUTS = [
   { id: "pub", label: "Texte pub", icon: "📢" },
 ];
 
-export default function CreativeStudio({ orgId }: { orgId: string }) {
+export default function CreativeStudio({ orgId, icpProfile }: { orgId: string; icpProfile?: string | null }) {
   const [produit, setProduit] = useState("");
-  const [cible, setCible] = useState("");
+ const [cible, setCible] = useState(icpProfile ?? "");
   const [emotion, setEmotion] = useState(EMOTIONS[0]);
   const [format, setFormat] = useState(FORMATS[0]);
   const [typeOutput, setTypeOutput] = useState("slogan");

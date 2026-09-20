@@ -9,8 +9,9 @@ export default async function FatimaPage() {
 
   const org = await db.organization.findUnique({
     where: { clerkOrgId: orgId },
+    include: { brandKit: true },
   });
-  if (!org) redirect("/onboarding");
+  if (!org?.brandKit) redirect("/onboarding");
 
-  return <SupportStudio orgId={org.id} />;
+  return <SupportStudio orgId={org.id} tone={org.brandKit.tone} />;
 }

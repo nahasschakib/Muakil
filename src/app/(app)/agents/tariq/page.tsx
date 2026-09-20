@@ -9,8 +9,9 @@ export default async function TariqPage() {
 
   const org = await db.organization.findUnique({
     where: { clerkOrgId: orgId },
+    include: { brandKit: true },
   });
-  if (!org) redirect("/onboarding");
+  if (!org?.brandKit) redirect("/onboarding");
 
-  return <StrategyStudio orgId={org.id} />;
+  return <StrategyStudio orgId={org.id} sector={org.brandKit.sector} />;
 }

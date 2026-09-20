@@ -36,6 +36,7 @@ export default async function SamiaPage({
       workflowId={workflowId}
       stepId={stepId}
       previousOutput={previousOutput}
+       brandKit={org.brandKit}
     />
   );
 }

@@ -16,6 +16,10 @@ export default async function SalmaStudioPage() {
   if (!org?.brandKit) redirect("/onboarding");
 
   return (
-    <ContentStudio brandName={org.brandKit.brandName} />
+     <ContentStudio
+      brandName={org.brandKit.brandName}
+      tone={org.brandKit.tone}
+      icpProfile={org.brandKit.icpProfile}
+    />
   );
 }

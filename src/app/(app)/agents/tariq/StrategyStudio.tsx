@@ -12,8 +12,10 @@ const OUTPUTS = [
   { id: "positionnement", label: "Positionnement", icon: "🎯" },
 ];
 
-export default function StrategyStudio({ orgId }: { orgId: string }) {
-  const [secteur, setSecteur] = useState(SECTEURS[0]);
+export default function StrategyStudio({ orgId, sector }: { orgId: string; sector?: string | null }) {
+   const [secteur, setSecteur] = useState(
+    (sector && SECTEURS.includes(sector)) ? sector : SECTEURS[0]
+  );
   const [taille, setTaille] = useState(TAILLES[2]);
   const [defi, setDefi] = useState(DEFIS[0]);
   const [objectif, setObjectif] = useState("");

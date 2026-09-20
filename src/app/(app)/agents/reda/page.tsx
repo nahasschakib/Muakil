@@ -9,8 +9,9 @@ export default async function RedaPage() {
 
   const org = await db.organization.findUnique({
     where: { clerkOrgId: orgId },
+    include: { brandKit: true },
   });
-  if (!org) redirect("/onboarding");
+  if (!org?.brandKit) redirect("/onboarding");
 
   return <DeckStudio orgId={org.id} />;
 }

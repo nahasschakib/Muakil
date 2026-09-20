@@ -12,9 +12,11 @@ const OUTPUTS = [
   { id: "lettre", label: "Lettre d'embauche", icon: "📄" },
 ];
 
-export default function HRStudio({ orgId }: { orgId: string }) {
+export default function HRStudio({ orgId, sector }: { orgId: string; sector?: string | null }) {
   const [poste, setPoste] = useState("");
-  const [secteur, setSecteur] = useState(SECTEURS[0]);
+ const [secteur, setSecteur] = useState(
+    (sector && SECTEURS.includes(sector)) ? sector : SECTEURS[0]
+  );
   const [typeContrat, setTypeContrat] = useState(CONTRATS[0]);
   const [niveauExperience, setNiveauExperience] = useState(NIVEAUX[0]);
   const [competences, setCompetences] = useState("");

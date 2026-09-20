@@ -14,5 +14,5 @@ export default async function YasmineStudioPage() {
 
   if (!org?.brandKit) redirect("/onboarding");
 
-  return <EcomStudio />;
+    return <EcomStudio icpProfile={org.brandKit.icpProfile} />;
 }

@@ -5,6 +5,7 @@ import { InvoicePreview } from "./InvoicePreview";
 import { saveLivrable } from "@/app/(app)/livrables/actions";
 import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
 import { useRouter } from "next/navigation";
+import type { BrandKit } from "@prisma/client";
 
 type Line = { designation: string; qty: number; unitPrice: number };
 type Invoice = any;
@@ -24,16 +25,21 @@ function addDays(dateStr: string, days: number) {
 type InvoiceStudioProps = {
   workflowId?: string;
   stepId?: string;
-  previousOutput?: Record<string, any> | null;
+  previousOutput?: Record<string, unknown> | null;
+  brandKit?: BrandKit | null;
+  prospectNameFromNour?: string;
 };
 
-export function InvoiceStudio({ workflowId, stepId, previousOutput }: InvoiceStudioProps) {
+export function InvoiceStudio({ workflowId, stepId, previousOutput, brandKit, prospectNameFromNour }: InvoiceStudioProps) {
   const [invoiceNumber, setInvoiceNumber] = useState("FA-001");
   const [invoiceDate, setInvoiceDate] = useState(today());
   const [dueDate, setDueDate] = useState(addDays(today(), 30));
-  const [clientName, setClientName] = useState(previousOutput?.prospectName ?? "");
+   const [clientName, setClientName] = useState(
+    (previousOutput?.prospectName as string) ?? prospectNameFromNour ?? ""
+  );
+
   const [clientAddress, setClientAddress] = useState("");
-  const [clientCity, setClientCity] = useState("");
+  const [clientCity, setClientCity] = useState(brandKit?.city ?? "");
   const [clientICE, setClientICE] = useState("");
   const [lines, setLines] = useState<Line[]>([
     { designation: "", qty: 1, unitPrice: 0 },
@@ -111,7 +117,7 @@ export function InvoiceStudio({ workflowId, stepId, previousOutput }: InvoiceStu
 
   async function handleSave() {
     if (!invoice) return;
-    const content = `**Facture ${invoice.invoiceNumber}** — ${invoice.client.name}\n\nDate : ${invoice.invoiceDate}\nÉchéance : ${invoice.dueDate}\n\n**Lignes :**\n${invoice.lines.map((l: any) => `- ${l.designation} × ${l.qty} = ${l.total} MAD`).join("\n")}\n\n**Total HT :** ${invoice.totals.totalHT} MAD\n**TVA (${invoice.totals.tvaRate}%) :** ${invoice.totals.tvaAmount} MAD\n**Total TTC :** ${invoice.totals.totalTTC} MAD${invoice.totals.withholding ? `\n**Retenue source :** −${invoice.totals.withholdingAmount} MAD` : ""}\n**Net à payer :** ${invoice.totals.netAPayer} MAD`;
+    const content = `**Facture ${invoice.invoiceNumber}** — ${invoice.client.name}\n\nDate : ${invoice.invoiceDate}\nÉchéance : ${invoice.dueDate}\n\n**Lignes :**\n${invoice.lines.map((l: Record<string, unknown>) => `- ${l.designation} × ${l.qty} = ${l.total} MAD`).join("\n")}\n\n**Total HT :** ${invoice.totals.totalHT} MAD\n**TVA (${invoice.totals.tvaRate}%) :** ${invoice.totals.tvaAmount} MAD\n**Total TTC :** ${invoice.totals.totalTTC} MAD${invoice.totals.withholding ? `\n**Retenue source :** −${invoice.totals.withholdingAmount} MAD` : ""}\n**Net à payer :** ${invoice.totals.netAPayer} MAD`;
     await saveLivrable({
       agentSlug: "karima",
       title: `Facture ${invoice.invoiceNumber} — ${invoice.client.name}`,

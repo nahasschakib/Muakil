@@ -5,6 +5,8 @@ import { ResultCards } from "./ResultCards";
 import { saveLivrable } from "@/app/(app)/livrables/actions";
 import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
 import { useRouter } from "next/navigation";
+import type { BrandKit } from "@prisma/client";
+
 type SearchType = "prospects" | "concurrents" | "actualites" | "marche";
 
 const searchTypes: { id: SearchType; emoji: string; label: string; desc: string }[] = [
@@ -58,13 +60,14 @@ type SearchData = {
 type ResearchStudioProps = {
   workflowId?: string
   stepId?: string
+  brandKit?: BrandKit | null
 }
 
-export function ResearchStudio({ workflowId, stepId }: ResearchStudioProps) {
+export function ResearchStudio({ workflowId, stepId, brandKit }: ResearchStudioProps) {
   const [searchType, setSearchType] = useState<SearchType>("prospects");
   const [query, setQuery] = useState("");
-  const [city, setCity] = useState("Casablanca");
-  const [sector, setSector] = useState("");
+   const [city, setCity] = useState(brandKit?.city ?? "Casablanca");
+   const [sector, setSector] = useState(brandKit?.sector ?? "");
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<SearchData | null>(null);
   const [saved, setSaved] = useState(false);

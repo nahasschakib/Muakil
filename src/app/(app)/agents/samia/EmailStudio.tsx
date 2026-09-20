@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import EmailPreview from "./EmailPreview";
 import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
 import { useRouter } from "next/navigation";
+import type { BrandKit } from "@prisma/client";
 
 const DESTINATAIRES = ["Client prospect", "Client existant", "Fournisseur", "Partenaire", "Direction / Associés", "Équipe interne", "Banque / Institution"];
 const TONS = ["Professionnel", "Chaleureux", "Formel", "Persuasif", "Urgent"];
@@ -18,10 +19,11 @@ type EmailStudioProps = {
   orgId: string
   workflowId?: string
   stepId?: string
-  previousOutput?: Record<string, any> | null
+  previousOutput?: Record<string, unknown> | null
+  brandKit?: BrandKit | null
 }
 
-export default function EmailStudio({ orgId, workflowId, stepId, previousOutput }: EmailStudioProps) {
+export default function EmailStudio({ orgId, workflowId, stepId, previousOutput, brandKit }: EmailStudioProps) {
   const [objet, setObjet] = useState(
   previousOutput?.prospectName 
     ? `Proposition commerciale — ${previousOutput.prospectName}` 
@@ -31,7 +33,11 @@ export default function EmailStudio({ orgId, workflowId, stepId, previousOutput 
 );
   const [destinataire, setDestinataire] = useState(DESTINATAIRES[0]);
   const [contexte, setContexte] = useState(previousOutput?.prospectSector ? `Secteur : ${previousOutput.prospectSector}` : "");
-  const [ton, setTon] = useState(TONS[0]);
+  const [ton, setTon] = useState(
+      (brandKit?.tone && TONS.includes(brandKit.tone as typeof TONS[number]))
+        ? brandKit.tone as typeof TONS[number]
+        : TONS[0]
+    );
   const [typeOutput, setTypeOutput] = useState("email");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);

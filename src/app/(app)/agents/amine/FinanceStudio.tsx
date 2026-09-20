@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState } from "react";
 import { useRef } from "react";
@@ -95,7 +96,7 @@ ${analysis.forces.map((f: string) => `- ${f}`).join("\n")}
 ${analysis.risques.map((r: string) => `- ${r}`).join("\n")}
 
 ## Plan d'action
-${analysis.recommandations.map((r: any) => `- [${r.priorite.toUpperCase()}] ${r.action} (${r.delai})`).join("\n")}
+${analysis.recommandations.map((r:any) => `- [${r.priorite.toUpperCase()}] ${r.action} (${r.delai})`).join("\n")}
 
 💡 **Conseil :** ${analysis.tip}`;
 
@@ -213,7 +214,7 @@ ${analysis.recommandations.map((r: any) => `- [${r.priorite.toUpperCase()}] ${r.
                   <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleFileImport} />
                 </label>
                 {importError && <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">❌ {importError}</p>}
-                {importSuccess && <p className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">✅ Données importées — vérifiez ci-dessous et lancez l'analyse</p>}
+                {importSuccess && <p className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">✅ Données importées — vérifiez ci-dessous et lancez l&apos;analyse</p>}
               </div>
             )}
           </section>
@@ -301,7 +302,7 @@ ${analysis.recommandations.map((r: any) => `- [${r.priorite.toUpperCase()}] ${r.
             <div className="h-full min-h-64 flex flex-col items-center justify-center text-center rounded-2xl border border-dashed border-[#2A2D3E] p-12">
               <div className="w-14 h-14 rounded-2xl bg-[#1C1F2E] flex items-center justify-center text-2xl mb-4">📊</div>
               <p className="text-gray-400 text-sm font-medium">Votre tableau de bord apparaîtra ici</p>
-              <p className="text-gray-600 text-xs mt-1">Saisissez vos données financières et lancez l'analyse</p>
+              <p className="text-gray-600 text-xs mt-1">Saisissez vos données financières et lancez l&apos;analyse</p>
             </div>
           )}
         </div>
