@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { requireOrg } from '@/lib/clerk'
 import { AGENTS, agentAccessible, type AgentPlan } from '@/lib/agents'
+import { agentInPack } from '@/lib/agents/packs'
 
 const PLAN_LABEL: Record<AgentPlan, string> = {
   STARTER: 'Starter',
@@ -29,10 +30,22 @@ const AGENT_GRADIENTS: Record<string, string> = {
 export default async function AgentsPage() {
   const org = await requireOrg()
   const orgPlan = org.plan as AgentPlan
+  const sector = org.brandKit?.sector ?? null
 
-  const accessibles = AGENTS.filter(a => agentAccessible(a.planMin, orgPlan))
-  const proPending = AGENTS.filter(a => a.planMin === 'PRO' && !agentAccessible(a.planMin, orgPlan))
-  const agencePending = AGENTS.filter(a => a.planMin === 'AGENCE' && !agentAccessible(a.planMin, orgPlan))
+  // Catégories mutuellement exclusives
+  // 1. Accessible par plan ET dans le pack
+  const actifs = AGENTS.filter(a =>
+    agentAccessible(a.planMin, orgPlan) && agentInPack(a.slug, sector)
+  )
+  // 2. Plan insuffisant (peu importe pack)
+  const horsPlan = AGENTS.filter(a => !agentAccessible(a.planMin, orgPlan))
+  // 3. Plan OK mais hors pack secteur
+  const horsPack = AGENTS.filter(a =>
+    agentAccessible(a.planMin, orgPlan) && !agentInPack(a.slug, sector)
+  )
+
+  const proPending = horsPlan.filter(a => a.planMin === 'PRO')
+  const agencePending = horsPlan.filter(a => a.planMin === 'AGENCE')
 
   return (
     <div className="min-h-screen bg-[#0F1117]">
@@ -48,7 +61,7 @@ export default async function AgentsPage() {
               {org.brandKit?.brandName ?? org.name}
             </h1>
             <p className="text-sm text-white/40 mt-1">
-              {org.brandKit?.city ?? 'Maroc'} · {org.brandKit?.sector ?? 'Secteur non renseigné'}
+              {org.brandKit?.city ?? 'Maroc'} · {sector ?? 'Secteur non renseigné'}
             </p>
           </div>
           <div className="text-right">
@@ -56,7 +69,7 @@ export default async function AgentsPage() {
               Plan {PLAN_LABEL[orgPlan]}
             </span>
             <p className="text-xs text-white/30 mt-1">
-              {accessibles.length} agent{accessibles.length > 1 ? 's' : ''} actif{accessibles.length > 1 ? 's' : ''}
+              {actifs.length} agent{actifs.length > 1 ? 's' : ''} actif{actifs.length > 1 ? 's' : ''}
             </p>
           </div>
         </div>
@@ -64,8 +77,8 @@ export default async function AgentsPage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-px bg-white/5 rounded-2xl overflow-hidden">
           {[
-            { num: accessibles.length, label: 'Agents actifs' },
-            { num: AGENTS.length - accessibles.length, label: 'À débloquer' },
+            { num: actifs.length, label: 'Agents actifs' },
+            { num: horsPlan.length + horsPack.length, label: 'À débloquer' },
             { num: 15, label: 'Agents au total' },
           ].map((s) => (
             <div key={s.label} className="bg-[#1C1F2E] px-6 py-5">
@@ -75,37 +88,29 @@ export default async function AgentsPage() {
           ))}
         </div>
 
-        {/* Agents actifs — grille 4 colonnes */}
+        {/* Agents actifs */}
         <div className="space-y-4">
           <p className="text-xs font-semibold text-white/30 uppercase tracking-widest">
-            {accessibles.length === 1 ? 'Ton agent' : 'Tes agents'}
+            {actifs.length === 1 ? 'Ton agent' : 'Tes agents'}
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {accessibles.map((agent) => {
+            {actifs.map((agent) => {
               const gradient = AGENT_GRADIENTS[agent.slug] ?? 'from-slate-500 to-gray-600'
               return (
                 <Link key={agent.slug} href={`/agents/${agent.slug}`} className="group block">
                   <div className="relative p-5 rounded-2xl bg-[#1C1F2E] border border-white/5 hover:border-[#7C5CFC]/40 hover:shadow-lg hover:shadow-[#7C5CFC]/5 transition-all h-full flex flex-col gap-3">
-
-                    {/* Avatar */}
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-2xl flex-shrink-0`}>
                       {agent.emoji}
                     </div>
-
-                    {/* Infos */}
                     <div className="flex-1">
                       <div className="font-semibold text-white text-sm group-hover:text-[#A78BFA] transition-colors">
                         {agent.prenom}
                       </div>
-                      <div className="text-xs text-white/40 mt-0.5">
-                        {agent.role}
-                      </div>
+                      <div className="text-xs text-white/40 mt-0.5">{agent.role}</div>
                       <div className="text-xs text-white/25 mt-2 leading-relaxed line-clamp-2">
                         {agent.description}
                       </div>
                     </div>
-
-                    {/* CTA */}
                     <div className="text-xs text-white/20 group-hover:text-[#A78BFA] transition-colors font-medium">
                       Ouvrir →
                     </div>
@@ -115,6 +120,31 @@ export default async function AgentsPage() {
             })}
           </div>
         </div>
+
+        {/* Agents hors pack secteur */}
+        {horsPack.length > 0 && (
+          <div className="space-y-4">
+            <p className="text-xs font-semibold text-white/30 uppercase tracking-widest">
+              Hors pack {sector ?? 'secteur'}
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {horsPack.map((agent) => (
+                <div key={agent.slug} className="relative p-5 rounded-2xl bg-[#1C1F2E]/40 border border-white/3 opacity-50 flex flex-col gap-3">
+                  <span className="absolute top-3 right-3 text-xs font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                    Hors pack
+                  </span>
+                  <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl">
+                    {agent.emoji}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white/50 text-sm">{agent.prenom}</div>
+                    <div className="text-xs text-white/25 mt-0.5">{agent.role}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Agents Pro verrouillés */}
         {proPending.length > 0 && (
@@ -177,8 +207,8 @@ export default async function AgentsPage() {
               </div>
               <div className="text-xs text-white/40 mt-1">
                 {orgPlan === 'STARTER'
-                  ? 'À partir de 290 MAD/mois — essai 14 jours gratuit'
-                  : 'Plan Agence à partir de 1 990 MAD/mois'}
+                  ? 'À partir de 490 MAD HT/mois'
+                  : 'Plan Agence à partir de 990 MAD HT/mois'}
               </div>
             </div>
             <Link href="/#tarifs" className="flex-shrink-0 px-4 py-2 rounded-xl bg-[#7C5CFC] hover:bg-[#6B4FDB] text-white text-sm font-semibold transition-colors">
