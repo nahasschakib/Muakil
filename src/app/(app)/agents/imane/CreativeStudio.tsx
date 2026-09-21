@@ -4,6 +4,7 @@ import { useState } from "react";
 import CreativePreview from "./CreativePreview";
 import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
 import { Prisma } from "@prisma/client";
+import { saveLivrable } from "@/app/(app)/livrables/actions";
 
 const EMOTIONS = ["Confiance", "Fierté", "Urgence", "Appartenance", "Aspiration", "Sécurité", "Joie", "Exclusivité"];
 const FORMATS = ["Affiche / Flyer", "Bannière web", "Story Instagram", "Annonce presse", "Spot radio", "SMS marketing", "Panneau publicitaire"];
@@ -21,6 +22,7 @@ export default function CreativeStudio({ orgId, icpProfile, workflowId, stepId }
   const [typeOutput, setTypeOutput] = useState("slogan");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [saved, setSaved] = useState(false);
    
   const isWorkflow = !!workflowId && !!stepId;
 
@@ -44,6 +46,13 @@ export default function CreativeStudio({ orgId, icpProfile, workflowId, stepId }
   const inputClass = "w-full bg-[#1C1F2E] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50";
   const labelClass = "block text-xs font-medium text-white/60 mb-1";
 
+    async function handleSave() {
+    if (!result) return;
+    const content = `## ${result.typeOutput === "slogan" ? "Slogans" : result.typeOutput === "brief" ? "Brief créatif" : "Texte pub"}\n\n${JSON.stringify(result, null, 2)}`;
+    await saveLivrable({ agentSlug: "imane", title: `Création — ${result.typeOutput}`, content });
+    setSaved(true);
+  }
+
   return (
     <div className="min-h-screen bg-[#0F1117] text-white">
       <div className="border-b border-white/10 px-6 py-4 flex items-center gap-3">
@@ -51,6 +60,14 @@ export default function CreativeStudio({ orgId, icpProfile, workflowId, stepId }
         <div>
           <h1 className="font-semibold text-white">Imane — Creative Studio</h1>
           <p className="text-xs text-white/40">Slogans · Brief créatif · Textes publicitaires</p>
+        </div>
+                <div className="ml-auto flex items-center gap-2">
+          {result && !saved && (
+            <button onClick={handleSave} className="text-xs bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+              Enregistrer
+            </button>
+          )}
+          {saved && <span className="text-xs text-emerald-400 font-medium">✓ Enregistré</span>}
         </div>
                 {isWorkflow && result && (
           <button

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AnalyticsPreview from "./AnalyticsPreview";
+import { saveLivrable } from "@/app/(app)/livrables/actions";
 
 const DOMAINES = ["Commercial & Ventes", "Marketing & Communication", "Finance & Trésorerie", "RH & Équipe", "Opérations & Logistique", "Service client", "Production", "Digital & E-commerce"];
 const PERIODES = ["Ce mois-ci", "Trimestre en cours", "6 derniers mois", "Année en cours", "Année précédente"];
@@ -19,6 +20,7 @@ export default function AnalyticsStudio({ orgId, companyName }: { orgId: string;
   const [typeOutput, setTypeOutput] = useState("kpis");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const generate = async () => {
     setLoading(true);
@@ -46,6 +48,13 @@ export default function AnalyticsStudio({ orgId, companyName }: { orgId: string;
     window.open("/print/kamal", "_blank");
   };
 
+    async function handleSave() {
+    if (!result) return;
+    const content = `## Analytics — ${domaine} · ${periode}\n\n${JSON.stringify(result, null, 2)}`;
+    await saveLivrable({ agentSlug: "kamal", title: `Analytics — ${domaine} · ${typeOutput}`, content });
+    setSaved(true);
+  }
+
   const inputClass = "w-full bg-[#1C1F2E] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50";
   const labelClass = "block text-xs font-medium text-white/60 mb-1";
 
@@ -56,6 +65,14 @@ export default function AnalyticsStudio({ orgId, companyName }: { orgId: string;
         <div>
           <h1 className="font-semibold text-white">Kamal — Analytics Studio</h1>
           <p className="text-xs text-white/40">KPIs · Analyse performance · Rapport mensuel</p>
+        </div>
+                <div className="ml-auto flex items-center gap-2">
+          {result && !saved && (
+            <button onClick={handleSave} className="text-xs bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+              Enregistrer
+            </button>
+          )}
+          {saved && <span className="text-xs text-emerald-400 font-medium">✓ Enregistré</span>}
         </div>
          {result && (
           <button

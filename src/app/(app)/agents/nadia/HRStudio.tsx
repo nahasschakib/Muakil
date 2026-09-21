@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import HRPreview from "./HRPreview";
+import { saveLivrable } from "@/app/(app)/livrables/actions";
 
 const SECTEURS = ["Commerce & Distribution", "BTP & Immobilier", "Industrie & Production", "Services & Conseil", "Finance & Assurance", "Santé & Pharmacie", "Transport & Logistique", "IT & Digital", "Tourisme & Hôtellerie", "Agriculture & Agroalimentaire"];
 const CONTRATS = ["CDI", "CDD", "Contrat Anapec", "Stage PFE", "Stage d'application", "Freelance"];
@@ -24,6 +25,7 @@ export default function HRStudio({ orgId, sector }: { orgId: string; sector?: st
   const [typeOutput, setTypeOutput] = useState("offre");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const generate = async () => {
     if (!poste.trim()) return;
@@ -41,6 +43,12 @@ export default function HRStudio({ orgId, sector }: { orgId: string; sector?: st
       setLoading(false);
     }
   };
+    async function handleSave() {
+    if (!result) return;
+    const content = `## RH — ${result.typeOutput}\n\n${JSON.stringify(result, null, 2)}`;
+    await saveLivrable({ agentSlug: "nadia", title: `RH — ${result.typeOutput}`, content });
+    setSaved(true);
+  }
 
   const inputClass = "w-full bg-[#1C1F2E] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-teal-500/50";
   const labelClass = "block text-xs font-medium text-white/60 mb-1";
@@ -52,6 +60,14 @@ export default function HRStudio({ orgId, sector }: { orgId: string; sector?: st
         <div>
           <h1 className="font-semibold text-white">Nadia — HR Studio</h1>
           <p className="text-xs text-white/40">Offres d&apos;emploi · Grilles d&apos;entretien · Lettres d&apos;embauche</p>
+        </div>
+                <div className="ml-auto flex items-center gap-2">
+          {result && !saved && (
+            <button onClick={handleSave} className="text-xs bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+              Enregistrer
+            </button>
+          )}
+          {saved && <span className="text-xs text-emerald-400 font-medium">✓ Enregistré</span>}
         </div>
       </div>
 

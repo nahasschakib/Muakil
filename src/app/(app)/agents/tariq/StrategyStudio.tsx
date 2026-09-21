@@ -4,11 +4,37 @@ import { useRef, useState } from "react";
 import StrategyPreview from "./StrategyPreview";
 import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
 import { Prisma } from "@prisma/client";
+import { saveLivrable } from "@/app/(app)/livrables/actions";
 
-
-const SECTEURS = ["Commerce & Distribution", "BTP & Immobilier", "Industrie & Production", "Services & Conseil", "Finance & Assurance", "Santé & Pharmacie", "Transport & Logistique", "IT & Digital", "Tourisme & Hôtellerie", "Agriculture & Agroalimentaire"];
-const TAILLES = ["Auto-entrepreneur", "TPE (1-9 salariés)", "PME (10-49 salariés)", "ETI (50-249 salariés)", "Grande entreprise (250+)"];
-const DEFIS = ["Acquérir de nouveaux clients", "Fidéliser la clientèle existante", "Améliorer la rentabilité", "Se différencier de la concurrence", "Digitaliser les opérations", "Ouvrir un nouveau marché", "Restructurer l'organisation", "Gérer une crise"];
+const SECTEURS = [
+  "Commerce & Distribution",
+  "BTP & Immobilier",
+  "Industrie & Production",
+  "Services & Conseil",
+  "Finance & Assurance",
+  "Santé & Pharmacie",
+  "Transport & Logistique",
+  "IT & Digital",
+  "Tourisme & Hôtellerie",
+  "Agriculture & Agroalimentaire",
+];
+const TAILLES = [
+  "Auto-entrepreneur",
+  "TPE (1-9 salariés)",
+  "PME (10-49 salariés)",
+  "ETI (50-249 salariés)",
+  "Grande entreprise (250+)",
+];
+const DEFIS = [
+  "Acquérir de nouveaux clients",
+  "Fidéliser la clientèle existante",
+  "Améliorer la rentabilité",
+  "Se différencier de la concurrence",
+  "Digitaliser les opérations",
+  "Ouvrir un nouveau marché",
+  "Restructurer l'organisation",
+  "Gérer une crise",
+];
 const OUTPUTS = [
   { id: "swot", label: "Analyse SWOT", icon: "🔍" },
   { id: "plan90", label: "Plan 90 jours", icon: "📅" },
@@ -26,8 +52,8 @@ export default function StrategyStudio({
   workflowId?: string;
   stepId?: string;
 }) {
-   const [secteur, setSecteur] = useState(
-    (sector && SECTEURS.includes(sector)) ? sector : SECTEURS[0]
+  const [secteur, setSecteur] = useState(
+    sector && SECTEURS.includes(sector) ? sector : SECTEURS[0],
   );
   const [taille, setTaille] = useState(TAILLES[2]);
   const [defi, setDefi] = useState(DEFIS[0]);
@@ -36,9 +62,11 @@ export default function StrategyStudio({
   const [typeOutput, setTypeOutput] = useState("swot");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [saved, setSaved] = useState(false);
+ 
 
   const isWorkflow = !!workflowId && !!stepId;
-  const autoRef = useRef(false); 
+  const autoRef = useRef(false);
   const generate = async () => {
     if (!objectif.trim()) return;
     setLoading(true);
@@ -47,33 +75,66 @@ export default function StrategyStudio({
       const res = await fetch("/api/agents/tariq/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secteur, taille, defi, objectif, budget, typeOutput }),
+        body: JSON.stringify({
+          secteur,
+          taille,
+          defi,
+          objectif,
+          budget,
+          typeOutput,
+        }),
       });
       const data = await res.json();
       setResult(data);
-      } finally {
+    } finally {
       setLoading(false);
     }
   };
 
-    const completeStep = async (data: Record<string, unknown>) => {
+  const completeStep = async (data: Record<string, unknown>) => {
     if (!isWorkflow) return;
-    await completeWorkflowStep(workflowId!, stepId!, data as Prisma.InputJsonValue);
-     window.location.href = `/workflows/${workflowId}`;
-    };
+    await completeWorkflowStep(
+      workflowId!,
+      stepId!,
+      data as Prisma.InputJsonValue,
+    );
+    window.location.href = `/workflows/${workflowId}`;
+  };
 
-  const inputClass = "w-full bg-[#1C1F2E] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-slate-400/50";
+  async function handleSave() {
+    if (!result) return;
+    const content =
+      typeOutput === "swot"
+        ? `## Analyse SWOT — ${secteur}\n\n**Forces :**\n${(result.forces as string[])?.map((f) => `- ${f}`).join("\n")}\n\n**Faiblesses :**\n${(result.faiblesses as string[])?.map((f) => `- ${f}`).join("\n")}\n\n**Opportunités :**\n${(result.opportunites as string[])?.map((o) => `- ${o}`).join("\n")}\n\n**Menaces :**\n${(result.menaces as string[])?.map((m) => `- ${m}`).join("\n")}\n\n**Priorité :** ${result.priorite}\n\n💡 **Conseil :** ${result.tip}`
+        : typeOutput === "plan90"
+          ? `## Plan 90 jours — ${secteur}\n\n**Mois 1 — ${(result.mois1 as { theme: string }).theme}**\n${(result.mois1 as { actions: string[] }).actions?.map((a) => `- ${a}`).join("\n")}\n\n**Mois 2 — ${(result.mois2 as { theme: string }).theme}**\n${(result.mois2 as { actions: string[] }).actions?.map((a) => `- ${a}`).join("\n")}\n\n**Mois 3 — ${(result.mois3 as { theme: string }).theme}**\n${(result.mois3 as { actions: string[] }).actions?.map((a) => `- ${a}`).join("\n")}\n\n**KPIs :** ${(result.kpis as string[])?.join(", ")}\n\n💡 **Conseil :** ${result.tip}`
+          : `## Positionnement — ${secteur}\n\n**Proposition de valeur :** ${result.proposition}\n\n**Cible :** ${result.cible}\n\n**Différenciateurs :**\n${(result.differenciateurs as string[])?.map((d) => `- ${d}`).join("\n")}\n\n**Messages clés :**\n${(result.messages as string[])?.map((m) => `- ${m}`).join("\n")}\n\n💡 **Conseil :** ${result.tip}`;
+
+    await saveLivrable({
+      agentSlug: "tariq",
+      title: `Stratégie — ${OUTPUTS.find((o) => o.id === typeOutput)?.label} · ${secteur}`,
+      content,
+    });
+    setSaved(true);
+  }
+
+  const inputClass =
+    "w-full bg-[#1C1F2E] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-slate-400/50";
   const labelClass = "block text-xs font-medium text-white/60 mb-1";
 
   return (
     <div className="min-h-screen bg-[#0F1117] text-white">
       <div className="border-b border-white/10 px-6 py-4 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-slate-500/20 flex items-center justify-center text-lg">🧠</div>
+        <div className="w-9 h-9 rounded-xl bg-slate-500/20 flex items-center justify-center text-lg">
+          🧠
+        </div>
         <div>
           <h1 className="font-semibold text-white">Tariq — Strategy Studio</h1>
-          <p className="text-xs text-white/40">SWOT · Plan 90 jours · Positionnement concurrentiel</p>
+          <p className="text-xs text-white/40">
+            SWOT · Plan 90 jours · Positionnement concurrentiel
+          </p>
         </div>
-                 {isWorkflow && result && (
+        {isWorkflow && result && (
           <button
             onClick={async () => {
               await completeStep(result);
@@ -84,8 +145,22 @@ export default function StrategyStudio({
             Terminer cette étape →
           </button>
         )}
+        <div className="ml-auto flex items-center gap-2">
+          {result && !saved && (
+            <button
+              onClick={handleSave}
+              className="text-xs bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Enregistrer
+            </button>
+          )}
+          {saved && (
+            <span className="text-xs text-emerald-400 font-medium">
+              ✓ Enregistré
+            </span>
+          )}
+        </div>
       </div>
-      
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
         <div className="space-y-4">
@@ -93,7 +168,7 @@ export default function StrategyStudio({
           <div>
             <p className={labelClass}>Type d&apos;analyse</p>
             <div className="grid grid-cols-3 gap-2">
-              {OUTPUTS.map(o => (
+              {OUTPUTS.map((o) => (
                 <button
                   key={o.id}
                   onClick={() => setTypeOutput(o.id)}
@@ -104,28 +179,51 @@ export default function StrategyStudio({
                 </button>
               ))}
             </div>
-           
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelClass}>Secteur</label>
-              <select className={inputClass} value={secteur} onChange={e => setSecteur(e.target.value)}>
-                {SECTEURS.map(s => <option key={s} value={s}>{s}</option>)}
+              <select
+                className={inputClass}
+                value={secteur}
+                onChange={(e) => setSecteur(e.target.value)}
+              >
+                {SECTEURS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className={labelClass}>Taille entreprise</label>
-              <select className={inputClass} value={taille} onChange={e => setTaille(e.target.value)}>
-                {TAILLES.map(t => <option key={t} value={t}>{t}</option>)}
+              <select
+                className={inputClass}
+                value={taille}
+                onChange={(e) => setTaille(e.target.value)}
+              >
+                {TAILLES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
           <div>
             <label className={labelClass}>Défi principal</label>
-            <select className={inputClass} value={defi} onChange={e => setDefi(e.target.value)}>
-              {DEFIS.map(d => <option key={d} value={d}>{d}</option>)}
+            <select
+              className={inputClass}
+              value={defi}
+              onChange={(e) => setDefi(e.target.value)}
+            >
+              {DEFIS.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -135,7 +233,7 @@ export default function StrategyStudio({
               className={inputClass}
               placeholder="ex: Doubler le CA en 12 mois, conquérir Casablanca..."
               value={objectif}
-              onChange={e => setObjectif(e.target.value)}
+              onChange={(e) => setObjectif(e.target.value)}
             />
           </div>
 
@@ -146,7 +244,7 @@ export default function StrategyStudio({
                 className={inputClass}
                 placeholder="ex: 50 000 MAD, limité, à définir..."
                 value={budget}
-                onChange={e => setBudget(e.target.value)}
+                onChange={(e) => setBudget(e.target.value)}
               />
             </div>
           )}
@@ -156,7 +254,9 @@ export default function StrategyStudio({
             disabled={loading || !objectif.trim()}
             className="w-full py-3 rounded-xl bg-slate-600 hover:bg-slate-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all"
           >
-            {loading ? "Tariq analyse..." : `Générer ${OUTPUTS.find(o => o.id === typeOutput)?.label}`}
+            {loading
+              ? "Tariq analyse..."
+              : `Générer ${OUTPUTS.find((o) => o.id === typeOutput)?.label}`}
           </button>
         </div>
 

@@ -8,7 +8,12 @@ import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
 import { Prisma } from "@prisma/client";
 
 type Network = "Instagram" | "LinkedIn" | "Facebook";
-type Tone = "Professionnel" | "Décontracté" | "Inspirant" | "Humoristique" | "Éducatif";
+type Tone =
+  | "Professionnel"
+  | "Décontracté"
+  | "Inspirant"
+  | "Humoristique"
+  | "Éducatif";
 
 type Post = {
   caption: string;
@@ -18,7 +23,7 @@ type Post = {
 };
 
 type Props = {
-    brandName?: string;
+  brandName?: string;
   tone?: string | null;
   icpProfile?: string | null;
   workflowId?: string;
@@ -31,14 +36,28 @@ const networks: { id: Network; emoji: string; desc: string }[] = [
   { id: "Facebook", emoji: "👥", desc: "Communauté · Portée · Partage" },
 ];
 
-const tones: Tone[] = ["Professionnel", "Décontracté", "Inspirant", "Humoristique", "Éducatif"];
+const tones: Tone[] = [
+  "Professionnel",
+  "Décontracté",
+  "Inspirant",
+  "Humoristique",
+  "Éducatif",
+];
 
-export function ContentStudio({ brandName, tone: brandTone, icpProfile, workflowId, stepId }: Props) {
+export function ContentStudio({
+  brandName,
+  tone: brandTone,
+  icpProfile,
+  workflowId,
+  stepId,
+}: Props) {
   const { organization } = useOrganization();
   const [network, setNetwork] = useState<Network>("Instagram");
   const [theme, setTheme] = useState("");
   const [tone, setTone] = useState<Tone>(
-    (brandTone && tones.includes(brandTone as Tone)) ? brandTone as Tone : "Professionnel"
+    brandTone && tones.includes(brandTone as Tone)
+      ? (brandTone as Tone)
+      : "Professionnel",
   );
   const [cta, setCta] = useState("");
   const [targetAudience, setTargetAudience] = useState(icpProfile ?? "");
@@ -46,6 +65,7 @@ export function ContentStudio({ brandName, tone: brandTone, icpProfile, workflow
   const [post, setPost] = useState<Post | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const isWorkflow = !!workflowId && !!stepId;
 
   async function handleGenerate() {
@@ -76,7 +96,7 @@ export function ContentStudio({ brandName, tone: brandTone, icpProfile, workflow
 
   async function handleSave() {
     if (!post) return;
-    const content = `**Réseau :** ${network}\n**Ton :** ${tone}\n\n**Caption :**\n${post.caption}\n\n**Hashtags :** ${post.hashtags.map(h => `#${h}`).join(" ")}\n\n**Visuel suggéré :** ${post.visualSuggestion}`;
+    const content = `**Réseau :** ${network}\n**Ton :** ${tone}\n\n**Caption :**\n${post.caption}\n\n**Hashtags :** ${post.hashtags.map((h) => `#${h}`).join(" ")}\n\n**Visuel suggéré :** ${post.visualSuggestion}`;
     await saveLivrable({
       agentSlug: "salma",
       content,
@@ -94,10 +114,15 @@ export function ContentStudio({ brandName, tone: brandTone, icpProfile, workflow
             S
           </div>
           <div>
-            <h1 className="font-semibold text-sm text-white" style={{ fontFamily: "'Bricolage Grotesque', Inter, sans-serif" }}>
+            <h1
+              className="font-semibold text-sm text-white"
+              style={{ fontFamily: "'Bricolage Grotesque', Inter, sans-serif" }}
+            >
               Studio Salma
             </h1>
-            <p className="text-xs text-gray-500">ContentStudio — Génération de contenu social</p>
+            <p className="text-xs text-gray-500">
+              ContentStudio — Génération de contenu social
+            </p>
           </div>
           {post && !saved && (
             <button
@@ -108,31 +133,37 @@ export function ContentStudio({ brandName, tone: brandTone, icpProfile, workflow
             </button>
           )}
           {saved && (
-            <span className="ml-auto text-xs text-emerald-400 font-medium">✓ Enregistré dans les livrables</span>
+            <span className="ml-auto text-xs text-emerald-400 font-medium">
+              ✓ Enregistré dans les livrables
+            </span>
           )}
-         {isWorkflow && post && (
-  <button
-    onClick={async () => {
-      await completeWorkflowStep(workflowId!, stepId!, post as unknown as Prisma.InputJsonValue);
-      window.location.href = `/workflows/${workflowId}`;
-    }}
-    className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-all"
-  >
-    Terminer cette étape →
-  </button>
-)}
+          {isWorkflow && post && (
+            <button
+              onClick={async () => {
+                await completeWorkflowStep(
+                  workflowId!,
+                  stepId!,
+                  post as unknown as Prisma.InputJsonValue,
+                );
+                window.location.href = `/workflows/${workflowId}`;
+              }}
+              className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-all"
+            >
+              Terminer cette étape →
+            </button>
+          )}
         </div>
       </div>
 
       {/* Corps — 2 colonnes */}
       <div className="max-w-6xl mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-5 gap-8">
-
         {/* Colonne gauche — Formulaire (2/5) */}
         <div className="lg:col-span-2 space-y-6">
-
           {/* Choix réseau */}
           <section className="space-y-3">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Réseau cible</h2>
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              Réseau cible
+            </h2>
             <div className="space-y-2">
               {networks.map((n) => (
                 <button
@@ -173,7 +204,9 @@ export function ContentStudio({ brandName, tone: brandTone, icpProfile, workflow
 
           {/* Ton */}
           <section className="space-y-2">
-            <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Ton</label>
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              Ton
+            </label>
             <div className="flex flex-wrap gap-2">
               {tones.map((t) => (
                 <button
@@ -194,7 +227,10 @@ export function ContentStudio({ brandName, tone: brandTone, icpProfile, workflow
           {/* CTA */}
           <section className="space-y-2">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
-              Call-to-action <span className="text-gray-600 normal-case font-normal">(optionnel)</span>
+              Call-to-action{" "}
+              <span className="text-gray-600 normal-case font-normal">
+                (optionnel)
+              </span>
             </label>
             <input
               value={cta}
@@ -207,7 +243,10 @@ export function ContentStudio({ brandName, tone: brandTone, icpProfile, workflow
           {/* Audience */}
           <section className="space-y-2">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
-              Audience <span className="text-gray-600 normal-case font-normal">(optionnel)</span>
+              Audience{" "}
+              <span className="text-gray-600 normal-case font-normal">
+                (optionnel)
+              </span>
             </label>
             <input
               value={targetAudience}
@@ -244,20 +283,33 @@ export function ContentStudio({ brandName, tone: brandTone, icpProfile, workflow
         <div className="lg:col-span-3">
           {post ? (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <PostPreview post={post} network={network} brandName={brandName || organization?.name} />
+              <PostPreview
+                post={post}
+                network={network}
+                brandName={brandName || organization?.name}
+              />
 
               {/* Texte copyable */}
               <div className="mt-4 bg-[#1C1F2E] border border-[#2A2D3E] rounded-xl p-4 space-y-3">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Texte prêt à copier</h3>
-                <p className="text-sm text-gray-200 whitespace-pre-line leading-relaxed">{post.caption}</p>
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                  Texte prêt à copier
+                </h3>
+                <p className="text-sm text-gray-200 whitespace-pre-line leading-relaxed">
+                  {post.caption}
+                </p>
                 <div className="flex flex-wrap gap-1 pt-1">
                   {post.hashtags.map((tag, i) => (
-                    <span key={i} className="text-xs text-violet-400 font-medium">#{tag}</span>
+                    <span
+                      key={i}
+                      className="text-xs text-violet-400 font-medium"
+                    >
+                      #{tag}
+                    </span>
                   ))}
                 </div>
                 <button
                   onClick={() => {
-                    const text = `${post.caption}\n\n${post.hashtags.map(h => `#${h}`).join(" ")}`;
+                    const text = `${post.caption}\n\n${post.hashtags.map((h) => `#${h}`).join(" ")}`;
                     navigator.clipboard.writeText(text);
                   }}
                   className="text-xs text-gray-400 hover:text-white border border-[#2A2D3E] hover:border-gray-500 px-3 py-1.5 rounded-lg transition-all"
@@ -271,8 +323,12 @@ export function ContentStudio({ brandName, tone: brandTone, icpProfile, workflow
               <div className="w-14 h-14 rounded-2xl bg-[#1C1F2E] flex items-center justify-center text-2xl mb-4">
                 ✨
               </div>
-              <p className="text-gray-400 text-sm font-medium">Votre post apparaîtra ici</p>
-              <p className="text-gray-600 text-xs mt-1">Choisissez un réseau, décrivez votre thème, et générez</p>
+              <p className="text-gray-400 text-sm font-medium">
+                Votre post apparaîtra ici
+              </p>
+              <p className="text-gray-600 text-xs mt-1">
+                Choisissez un réseau, décrivez votre thème, et générez
+              </p>
             </div>
           )}
         </div>

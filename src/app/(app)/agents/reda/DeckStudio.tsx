@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import DeckPreview from "./DeckPreview";
+import { saveLivrable } from "@/app/(app)/livrables/actions";
 
 const AUDIENCES = ["Investisseurs", "Client prospect", "Partenaire commercial", "Équipe interne", "Direction / Associés", "Banque / Financement", "Appel d'offres public"];
 const OUTPUTS = [
@@ -18,6 +19,7 @@ export default function DeckStudio({ orgId }: { orgId: string }) {
   const [typeOutput, setTypeOutput] = useState("pitch");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const generate = async () => {
     if (!sujet.trim()) return;
@@ -35,6 +37,12 @@ export default function DeckStudio({ orgId }: { orgId: string }) {
       setLoading(false);
     }
   };
+    async function handleSave() {
+    if (!result) return;
+    const content = `## Deck — ${result.typeOutput}\n\n${JSON.stringify(result, null, 2)}`;
+    await saveLivrable({ agentSlug: "reda", title: `Deck — ${result.typeOutput}`, content });
+    setSaved(true);
+  }
 
   const inputClass = "w-full bg-[#1C1F2E] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500/50";
   const labelClass = "block text-xs font-medium text-white/60 mb-1";
@@ -46,6 +54,14 @@ export default function DeckStudio({ orgId }: { orgId: string }) {
         <div>
           <h1 className="font-semibold text-white">Reda — Deck Studio</h1>
           <p className="text-xs text-white/40">Pitch Deck · Présentation client · Compte-rendu</p>
+        </div>
+                <div className="ml-auto flex items-center gap-2">
+          {result && !saved && (
+            <button onClick={handleSave} className="text-xs bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+              Enregistrer
+            </button>
+          )}
+          {saved && <span className="text-xs text-emerald-400 font-medium">✓ Enregistré</span>}
         </div>
       </div>
 

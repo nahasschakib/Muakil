@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import SupportPreview from "./SupportPreview";
+import { saveLivrable } from "@/app/(app)/livrables/actions";
 
 const CANAUX = ["Email", "WhatsApp", "Téléphone", "Facebook", "Instagram", "En personne"];
 const TONS = ["Professionnel", "Chaleureux", "Formel", "Décontracté"];
@@ -22,6 +23,7 @@ export default function SupportStudio({ orgId, tone }: { orgId: string; tone?: s
   const [typeOutput, setTypeOutput] = useState("reclamation");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const generate = async () => {
     if (!situation.trim()) return;
@@ -40,6 +42,13 @@ export default function SupportStudio({ orgId, tone }: { orgId: string; tone?: s
     }
   };
 
+    async function handleSave() {
+    if (!result) return;
+    const content = `## Support — ${result.typeOutput}\n\n${JSON.stringify(result, null, 2)}`;
+    await saveLivrable({ agentSlug: "fatima", title: `Support — ${result.typeOutput}`, content });
+    setSaved(true);
+  }
+
   const inputClass = "w-full bg-[#1C1F2E] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50";
   const labelClass = "block text-xs font-medium text-white/60 mb-1";
 
@@ -56,6 +65,14 @@ export default function SupportStudio({ orgId, tone }: { orgId: string; tone?: s
         <div>
           <h1 className="font-semibold text-white">Fatima — Support Studio</h1>
           <p className="text-xs text-white/40">Réclamations · FAQ · Scripts &apos;appel</p>
+        </div>
+                <div className="ml-auto flex items-center gap-2">
+          {result && !saved && (
+            <button onClick={handleSave} className="text-xs bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+              Enregistrer
+            </button>
+          )}
+          {saved && <span className="text-xs text-emerald-400 font-medium">✓ Enregistré</span>}
         </div>
       </div>
 

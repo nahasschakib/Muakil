@@ -81,6 +81,7 @@ export function EcomStudio({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [productImage, setProductImage] = useState<string | null>(null);
+  
 
   const isWorkflow = !!workflowId && !!stepId;
 
