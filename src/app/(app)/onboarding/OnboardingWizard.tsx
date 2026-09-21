@@ -6,6 +6,7 @@ import { saveOnboarding, type OnboardingData } from './actions'
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type Step = 1 | 2 | 3 | 4 | 5
+type ChangeHandler = (k: keyof OnboardingData, v: string | boolean) => void
 
 // ── Constantes ───────────────────────────────────────────────────────────────
 
@@ -60,7 +61,7 @@ function Input({
   onChange,
   placeholder,
   ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & {
+}: Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> & {
   value: string
   onChange: (v: string) => void
 }) {
@@ -104,13 +105,7 @@ function Select({
 
 // ── Étapes ───────────────────────────────────────────────────────────────────
 
-function Step1({
-  data,
-  onChange,
-}: {
-  data: OnboardingData
-  onChange: (k: keyof OnboardingData, v: string) => void
-}) {
+function Step1({ data, onChange }: { data: OnboardingData; onChange: ChangeHandler }) {
   return (
     <div className="flex flex-col gap-5">
       <Field label="Nom de l'entreprise" required>
@@ -139,13 +134,7 @@ function Step1({
   )
 }
 
-function Step2({
-  data,
-  onChange,
-}: {
-  data: OnboardingData
-  onChange: (k: keyof OnboardingData, v: string) => void
-}) {
+function Step2({ data, onChange }: { data: OnboardingData; onChange: ChangeHandler }) {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-sm text-muted-foreground">Ces informations sont optionnelles — tu pourras les compléter depuis Brand Kit.</p>
@@ -173,13 +162,7 @@ function Step2({
   )
 }
 
-function Step3({
-  data,
-  onChange,
-}: {
-  data: OnboardingData
-  onChange: (k: keyof OnboardingData, v: string) => void
-}) {
+function Step3({ data, onChange }: { data: OnboardingData; onChange: ChangeHandler }) {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-sm text-muted-foreground">Ces informations sont optionnelles — tu pourras les compléter depuis Brand Kit.</p>
@@ -198,13 +181,7 @@ function Step3({
   )
 }
 
-function Step4({
-  data,
-  onChange,
-}: {
-  data: OnboardingData
-  onChange: (k: keyof OnboardingData, v: string) => void
-}) {
+function Step4({ data, onChange }: { data: OnboardingData; onChange: ChangeHandler }) {
   const [wordInput, setWordInput] = useState('')
 
   function addWord() {
@@ -280,7 +257,7 @@ function Step4({
   )
 }
 
-function Step5({ data }: { data: OnboardingData }) {
+function Step5({ data, onChange }: { data: OnboardingData; onChange: ChangeHandler }) {
   const rows: { label: string; value: string | undefined }[] = [
     { label: 'Entreprise', value: data.brandName },
     { label: 'Secteur', value: data.sector },
@@ -316,6 +293,21 @@ function Step5({ data }: { data: OnboardingData }) {
           </div>
         )}
       </div>
+      <label className="flex items-start gap-3 cursor-pointer mt-2">
+        <input
+          type="checkbox"
+          checked={!!data.cguAccepted}
+          onChange={e => onChange('cguAccepted', e.target.checked)}
+          className="mt-0.5 h-4 w-4 rounded border-border accent-primary cursor-pointer"
+        />
+        <span className="text-sm text-muted-foreground leading-relaxed">
+          J&apos;ai lu et j&apos;accepte les{' '}
+          <a href="/cgu" target="_blank" className="text-primary underline underline-offset-2 hover:text-primary/80">
+            Conditions Générales d&apos;Utilisation
+          </a>{' '}
+          de MUAKIL. Je confirme que les informations renseignées sont exactes.
+        </span>
+      </label>
     </div>
   )
 }
@@ -328,6 +320,7 @@ const INITIAL: OnboardingData = {
   city: '',
   formeJuridique: '',
   language: 'FR',
+  cguAccepted: false,
 }
 
 export default function OnboardingWizard() {
@@ -336,7 +329,7 @@ export default function OnboardingWizard() {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  function handleChange(key: keyof OnboardingData, value: string) {
+    function handleChange(key: keyof OnboardingData, value: string | boolean) {
     setData((prev) => ({ ...prev, [key]: value }))
   }
 
@@ -357,6 +350,7 @@ export default function OnboardingWizard() {
   }
 
   function submit() {
+     if (!data.cguAccepted) return
     setError(null)
     startTransition(async () => {
       try {
@@ -417,7 +411,7 @@ export default function OnboardingWizard() {
           {step === 2 && <Step2 data={data} onChange={handleChange} />}
           {step === 3 && <Step3 data={data} onChange={handleChange} />}
           {step === 4 && <Step4 data={data} onChange={handleChange} />}
-          {step === 5 && <Step5 data={data} />}
+          {step === 5 && <Step5 data={data} onChange={handleChange} />}
 
           {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
 
@@ -445,7 +439,7 @@ export default function OnboardingWizard() {
               <button
                 type="button"
                 onClick={submit}
-                disabled={isPending}
+                disabled={isPending || !data.cguAccepted}
                 className="h-10 rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 {isPending ? 'Enregistrement…' : 'Lancer MUAKIL 🚀'}

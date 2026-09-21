@@ -25,6 +25,7 @@ export type OnboardingData = {
   tone?: string
   forbiddenWords?: string[]
   icpProfile?: string
+  cguAccepted?: boolean
 }
 
 export async function saveOnboarding(data: OnboardingData) {

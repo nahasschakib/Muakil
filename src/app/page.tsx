@@ -531,10 +531,11 @@ export default function LandingPage() {
               <span style={{ fontSize: 15, fontWeight: 700, color: '#E2E8F0' }}>MUAKIL</span>
             </div>
             <span style={{ color: '#475569' }}>Studio IA pour les PME marocaines — Casablanca</span>
-            <div style={{ display: 'flex', gap: 20 }}>
+                        <div style={{ display: 'flex', gap: 20 }}>
               <Link href="/sign-in" style={{ color: '#475569' }}>Connexion</Link>
               <Link href="/sign-up" style={{ color: '#475569' }}>S&apos;inscrire</Link>
-              <Link href="mailto:cnahass@gmail.com" style={{ color: '#475569' }}>Contact</Link>
+              <Link href="/cgu" style={{ color: '#475569' }}>CGU</Link>
+              <Link href="mailto:contact@muakil.ma" style={{ color: '#475569' }}>Contact</Link>
             </div>
             <span style={{ color: '#334155' }}>© 2026 Muakil — SOCYTAY</span>
           </div>
