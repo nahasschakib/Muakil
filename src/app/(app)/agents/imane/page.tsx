@@ -3,7 +3,11 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import CreativeStudio from "./CreativeStudio";
 
-export default async function ImanePage() {
+export default async function ImanePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ workflowId?: string; stepId?: string }>;
+}) {
   const { orgId } = await auth();
   if (!orgId) redirect("/sign-in");
 
@@ -13,5 +17,14 @@ export default async function ImanePage() {
   });
   if (!org?.brandKit) redirect("/onboarding");
 
-  return <CreativeStudio orgId={org.id} icpProfile={org.brandKit.icpProfile} />;
+  const { workflowId, stepId } = await searchParams;
+
+  return (
+    <CreativeStudio
+      orgId={org.id}
+      icpProfile={org.brandKit.icpProfile}
+      workflowId={workflowId}
+      stepId={stepId}
+    />
+  );
 }

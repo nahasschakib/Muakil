@@ -3,7 +3,11 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { EcomStudio } from "./EcomStudio";
 
-export default async function YasmineStudioPage() {
+export default async function YasmineStudioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ workflowId?: string; stepId?: string }>;
+}) {
   const { orgId } = await auth();
   if (!orgId) redirect("/sign-in");
 
@@ -11,8 +15,15 @@ export default async function YasmineStudioPage() {
     where: { clerkOrgId: orgId },
     include: { brandKit: true },
   });
-
   if (!org?.brandKit) redirect("/onboarding");
 
-    return <EcomStudio icpProfile={org.brandKit.icpProfile} />;
+  const { workflowId, stepId } = await searchParams;
+
+  return (
+    <EcomStudio
+      icpProfile={org.brandKit.icpProfile}
+      workflowId={workflowId}
+      stepId={stepId}
+    />
+  );
 }

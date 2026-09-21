@@ -4,6 +4,8 @@ import { useState } from "react";
 import { PostPreview } from "./PostPreview";
 import { saveLivrable } from "@/app/(app)/livrables/actions";
 import { useOrganization } from "@clerk/nextjs";
+import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
+import { Prisma } from "@prisma/client";
 
 type Network = "Instagram" | "LinkedIn" | "Facebook";
 type Tone = "Professionnel" | "Décontracté" | "Inspirant" | "Humoristique" | "Éducatif";
@@ -16,9 +18,11 @@ type Post = {
 };
 
 type Props = {
-  brandName?: string;
+    brandName?: string;
   tone?: string | null;
   icpProfile?: string | null;
+  workflowId?: string;
+  stepId?: string;
 };
 
 const networks: { id: Network; emoji: string; desc: string }[] = [
@@ -29,7 +33,7 @@ const networks: { id: Network; emoji: string; desc: string }[] = [
 
 const tones: Tone[] = ["Professionnel", "Décontracté", "Inspirant", "Humoristique", "Éducatif"];
 
-export function ContentStudio({ brandName, tone: brandTone, icpProfile }: Props) {
+export function ContentStudio({ brandName, tone: brandTone, icpProfile, workflowId, stepId }: Props) {
   const { organization } = useOrganization();
   const [network, setNetwork] = useState<Network>("Instagram");
   const [theme, setTheme] = useState("");
@@ -42,6 +46,7 @@ export function ContentStudio({ brandName, tone: brandTone, icpProfile }: Props)
   const [post, setPost] = useState<Post | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isWorkflow = !!workflowId && !!stepId;
 
   async function handleGenerate() {
     if (!theme.trim()) return;
@@ -105,6 +110,17 @@ export function ContentStudio({ brandName, tone: brandTone, icpProfile }: Props)
           {saved && (
             <span className="ml-auto text-xs text-emerald-400 font-medium">✓ Enregistré dans les livrables</span>
           )}
+         {isWorkflow && post && (
+  <button
+    onClick={async () => {
+      await completeWorkflowStep(workflowId!, stepId!, post as unknown as Prisma.InputJsonValue);
+      window.location.href = `/workflows/${workflowId}`;
+    }}
+    className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-all"
+  >
+    Terminer cette étape →
+  </button>
+)}
         </div>
       </div>
 

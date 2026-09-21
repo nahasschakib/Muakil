@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import CreativePreview from "./CreativePreview";
+import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
+import { Prisma } from "@prisma/client";
 
 const EMOTIONS = ["Confiance", "Fierté", "Urgence", "Appartenance", "Aspiration", "Sécurité", "Joie", "Exclusivité"];
 const FORMATS = ["Affiche / Flyer", "Bannière web", "Story Instagram", "Annonce presse", "Spot radio", "SMS marketing", "Panneau publicitaire"];
@@ -11,7 +13,7 @@ const OUTPUTS = [
   { id: "pub", label: "Texte pub", icon: "📢" },
 ];
 
-export default function CreativeStudio({ orgId, icpProfile }: { orgId: string; icpProfile?: string | null }) {
+export default function CreativeStudio({ orgId, icpProfile, workflowId, stepId }: { orgId: string; icpProfile?: string | null; workflowId?: string; stepId?: string }) {
   const [produit, setProduit] = useState("");
  const [cible, setCible] = useState(icpProfile ?? "");
   const [emotion, setEmotion] = useState(EMOTIONS[0]);
@@ -19,6 +21,8 @@ export default function CreativeStudio({ orgId, icpProfile }: { orgId: string; i
   const [typeOutput, setTypeOutput] = useState("slogan");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
+   
+  const isWorkflow = !!workflowId && !!stepId;
 
   const generate = async () => {
     if (!produit.trim()) return;
@@ -48,6 +52,17 @@ export default function CreativeStudio({ orgId, icpProfile }: { orgId: string; i
           <h1 className="font-semibold text-white">Imane — Creative Studio</h1>
           <p className="text-xs text-white/40">Slogans · Brief créatif · Textes publicitaires</p>
         </div>
+                {isWorkflow && result && (
+          <button
+            onClick={async () => {
+              await completeWorkflowStep(workflowId!, stepId!, result as Prisma.InputJsonValue);
+              window.location.href = `/workflows/${workflowId}`;
+            }}
+            className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-all"
+          >
+            Terminer cette étape →
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">

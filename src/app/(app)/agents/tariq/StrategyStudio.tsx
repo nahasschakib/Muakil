@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import StrategyPreview from "./StrategyPreview";
+import { completeWorkflowStep } from "@/app/(app)/workflows/actions";
+import { Prisma } from "@prisma/client";
+
 
 const SECTEURS = ["Commerce & Distribution", "BTP & Immobilier", "Industrie & Production", "Services & Conseil", "Finance & Assurance", "Santé & Pharmacie", "Transport & Logistique", "IT & Digital", "Tourisme & Hôtellerie", "Agriculture & Agroalimentaire"];
 const TAILLES = ["Auto-entrepreneur", "TPE (1-9 salariés)", "PME (10-49 salariés)", "ETI (50-249 salariés)", "Grande entreprise (250+)"];
@@ -12,7 +15,17 @@ const OUTPUTS = [
   { id: "positionnement", label: "Positionnement", icon: "🎯" },
 ];
 
-export default function StrategyStudio({ orgId, sector }: { orgId: string; sector?: string | null }) {
+export default function StrategyStudio({
+  orgId,
+  sector,
+  workflowId,
+  stepId,
+}: {
+  orgId: string;
+  sector?: string | null;
+  workflowId?: string;
+  stepId?: string;
+}) {
    const [secteur, setSecteur] = useState(
     (sector && SECTEURS.includes(sector)) ? sector : SECTEURS[0]
   );
@@ -24,6 +37,8 @@ export default function StrategyStudio({ orgId, sector }: { orgId: string; secto
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
 
+  const isWorkflow = !!workflowId && !!stepId;
+  const autoRef = useRef(false); 
   const generate = async () => {
     if (!objectif.trim()) return;
     setLoading(true);
@@ -36,10 +51,16 @@ export default function StrategyStudio({ orgId, sector }: { orgId: string; secto
       });
       const data = await res.json();
       setResult(data);
-    } finally {
+      } finally {
       setLoading(false);
     }
   };
+
+    const completeStep = async (data: Record<string, unknown>) => {
+    if (!isWorkflow) return;
+    await completeWorkflowStep(workflowId!, stepId!, data as Prisma.InputJsonValue);
+     window.location.href = `/workflows/${workflowId}`;
+    };
 
   const inputClass = "w-full bg-[#1C1F2E] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-slate-400/50";
   const labelClass = "block text-xs font-medium text-white/60 mb-1";
@@ -52,7 +73,19 @@ export default function StrategyStudio({ orgId, sector }: { orgId: string; secto
           <h1 className="font-semibold text-white">Tariq — Strategy Studio</h1>
           <p className="text-xs text-white/40">SWOT · Plan 90 jours · Positionnement concurrentiel</p>
         </div>
+                 {isWorkflow && result && (
+          <button
+            onClick={async () => {
+              await completeStep(result);
+              window.location.href = `/workflows/${workflowId}`;
+            }}
+            className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-all"
+          >
+            Terminer cette étape →
+          </button>
+        )}
       </div>
+      
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
         <div className="space-y-4">
@@ -71,6 +104,7 @@ export default function StrategyStudio({ orgId, sector }: { orgId: string; secto
                 </button>
               ))}
             </div>
+           
           </div>
 
           <div className="grid grid-cols-2 gap-3">
