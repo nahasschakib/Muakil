@@ -13,5 +13,5 @@ export default async function KamalPage() {
   });
   if (!org?.brandKit) redirect("/onboarding");
 
-  return <AnalyticsStudio orgId={org.id} />;
+  return <AnalyticsStudio orgId={org.id} companyName={org.brandKit?.brandName ?? undefined} />;
 }

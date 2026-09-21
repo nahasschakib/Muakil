@@ -11,7 +11,7 @@ const OUTPUTS = [
   { id: "rapport", label: "Rapport mensuel", icon: "📋" },
 ];
 
-export default function AnalyticsStudio({ orgId }: { orgId: string }) {
+export default function AnalyticsStudio({ orgId, companyName }: { orgId: string; companyName?: string }) {
   const [domaine, setDomaine] = useState(DOMAINES[0]);
   const [periode, setPeriode] = useState(PERIODES[0]);
   const [donnees, setDonnees] = useState("");
@@ -36,6 +36,16 @@ export default function AnalyticsStudio({ orgId }: { orgId: string }) {
     }
   };
 
+    const handlePrint = () => {
+    if (!result) return;
+    localStorage.setItem("muakil_print_kamal", JSON.stringify({
+      data: result,
+      typeOutput,
+      companyName: companyName || "Mon entreprise",
+    }));
+    window.open("/print/kamal", "_blank");
+  };
+
   const inputClass = "w-full bg-[#1C1F2E] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50";
   const labelClass = "block text-xs font-medium text-white/60 mb-1";
 
@@ -47,6 +57,14 @@ export default function AnalyticsStudio({ orgId }: { orgId: string }) {
           <h1 className="font-semibold text-white">Kamal — Analytics Studio</h1>
           <p className="text-xs text-white/40">KPIs · Analyse performance · Rapport mensuel</p>
         </div>
+         {result && (
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-all"
+          >
+            🖨️ Imprimer / PDF
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
@@ -178,6 +196,77 @@ export default function AnalyticsStudio({ orgId }: { orgId: string }) {
           </div>
         ))}
       </div>
+    )}
+        {domaine === "Opérations & Logistique" && (
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { key: "commandes", label: "Commandes traitées", placeholder: "ex: 320" },
+          { key: "delai", label: "Délai livraison moyen (j)", placeholder: "ex: 3" },
+          { key: "retours", label: "Taux de retours (%)", placeholder: "ex: 4" },
+          { key: "stock", label: "Stock moyen (MAD)", placeholder: "ex: 85 000" },
+          { key: "ruptures", label: "Ruptures de stock", placeholder: "ex: 5" },
+          { key: "fournisseurs", label: "Fournisseurs actifs", placeholder: "ex: 12" },
+        ].map(f => (
+          <div key={f.key}>
+            <label className="block text-xs text-white/40 mb-1">{f.label}</label>
+            <input className={inputClass} placeholder={f.placeholder}
+              onChange={e => setDonnees(prev => {
+                const lines = prev.split("\n").filter(l => !l.startsWith(f.label));
+                return [...lines, `${f.label} : ${e.target.value}`].filter(Boolean).join("\n");
+              })} />
+          </div>
+        ))}
+      </div>
+    )}
+    {domaine === "Production" && (
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { key: "volume", label: "Volume produit / mois", placeholder: "ex: 1 200 unités" },
+          { key: "rebut", label: "Taux de rebut (%)", placeholder: "ex: 3" },
+          { key: "cout", label: "Coût unitaire (MAD)", placeholder: "ex: 45" },
+          { key: "utilisation", label: "Utilisation machines (%)", placeholder: "ex: 78" },
+          { key: "incidents", label: "Incidents / pannes", placeholder: "ex: 2" },
+          { key: "delai", label: "Délai moyen fabrication (j)", placeholder: "ex: 5" },
+        ].map(f => (
+          <div key={f.key}>
+            <label className="block text-xs text-white/40 mb-1">{f.label}</label>
+            <input className={inputClass} placeholder={f.placeholder}
+              onChange={e => setDonnees(prev => {
+                const lines = prev.split("\n").filter(l => !l.startsWith(f.label));
+                return [...lines, `${f.label} : ${e.target.value}`].filter(Boolean).join("\n");
+              })} />
+          </div>
+        ))}
+      </div>
+    )}
+    {domaine === "Digital & E-commerce" && (
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { key: "visiteurs", label: "Visiteurs / mois", placeholder: "ex: 4 500" },
+          { key: "conversion", label: "Taux de conversion (%)", placeholder: "ex: 2.4" },
+          { key: "panier", label: "Panier moyen (MAD)", placeholder: "ex: 380" },
+          { key: "ca", label: "CA en ligne (MAD)", placeholder: "ex: 41 000" },
+          { key: "abandons", label: "Taux abandon panier (%)", placeholder: "ex: 68" },
+          { key: "retours", label: "Retours produits (%)", placeholder: "ex: 5" },
+        ].map(f => (
+          <div key={f.key}>
+            <label className="block text-xs text-white/40 mb-1">{f.label}</label>
+            <input className={inputClass} placeholder={f.placeholder}
+              onChange={e => setDonnees(prev => {
+                const lines = prev.split("\n").filter(l => !l.startsWith(f.label));
+                return [...lines, `${f.label} : ${e.target.value}`].filter(Boolean).join("\n");
+              })} />
+          </div>
+        ))}
+      </div>
+    )}
+    {!["Finance & Trésorerie","Commercial & Ventes","Marketing & Communication","RH & Équipe","Service client","Opérations & Logistique","Production","Digital & E-commerce"].includes(domaine) && (
+      <textarea
+        className={`${inputClass} resize-none h-24`}
+        placeholder="ex: Indiquez vos chiffres clés — volumes, montants MAD, pourcentages, objectifs vs réalisé..."
+        value={donnees}
+        onChange={e => setDonnees(e.target.value)}
+      />
     )}
     {domaine === "Service client" && (
       <div className="grid grid-cols-2 gap-2">
